@@ -1,0 +1,3 @@
+[submodule "Common/lib-tsniimash"]
+	path = Common/lib-tsniimash
+	url = https://github.com/cansat-tsniimash/lib-tsniimash.git

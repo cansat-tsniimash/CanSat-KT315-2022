@@ -1,5 +1,9 @@
 #MicroXplorer Configuration settings - do not modify
+FATFS.IPParameters=_MAX_SS,_USE_LFN
+FATFS._MAX_SS=4096
+FATFS._USE_LFN=1
 File.Version=6
+GPIO.groupedBy=Group By Peripherals
 KeepUserPlacement=false
 Mcu.Family=STM32F4
 Mcu.IP0=FATFS
@@ -59,8 +63,8 @@ ProjectManager.MainLocation=Core/Src
 ProjectManager.NoMain=false
 ProjectManager.PreviousToolchain=
 ProjectManager.ProjectBuild=false
-ProjectManager.ProjectFileName=sd-card-turbodrivers.ioc
-ProjectManager.ProjectName=sd-card-turbodrivers
+ProjectManager.ProjectFileName=sd-card-turbodrivers-f4.ioc
+ProjectManager.ProjectName=sd-card-turbodrivers-f4
 ProjectManager.RegisterCallBack=
 ProjectManager.StackSize=0x400
 ProjectManager.TargetToolchain=STM32CubeIDE

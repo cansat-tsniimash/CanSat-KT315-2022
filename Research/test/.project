@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>SDCARD_SPI_F103</name>
+	<name>test</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -22,30 +22,11 @@
 		<nature>com.st.stm32cube.ide.mcu.MCUProjectNature</nature>
 		<nature>com.st.stm32cube.ide.mcu.MCUCubeProjectNature</nature>
 		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUCubeIdeServicesRevAProjectNature</nature>
+		<nature>com.st.stm32cube.ide.mcu.MCUCubeIdeServicesRevAev2ProjectNature</nature>
 		<nature>com.st.stm32cube.ide.mcu.MCUAdvancedStructureProjectNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUEndUserDisabledTrustZoneProjectNature</nature>
 		<nature>com.st.stm32cube.ide.mcu.MCUSingleCpuProjectNature</nature>
 		<nature>com.st.stm32cube.ide.mcu.MCURootProjectNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
-		<nature>com.st.stm32cube.ide.mcu.MCUCubeIdeServicesRevAev2ProjectNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>lib-tsniimash</name>
-			<type>2</type>
-			<locationURI>f1</locationURI>
-		</link>
-	</linkedResources>
-	<variableList>
-		<variable>
-			<name>f1</name>
-			<value>file:/D:/KT315-git/CanSat-KT315-2022/Common/lib-tsniimash/stm32f1</value>
-		</variable>
-		<variable>
-			<name>f4</name>
-			<value>file:/D:/KT315-git/CanSat-KT315-2022/Common/lib-tsniimash/stm32f4</value>
-		</variable>
-	</variableList>
 </projectDescription>

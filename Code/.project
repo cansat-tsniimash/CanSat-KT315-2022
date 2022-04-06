@@ -29,4 +29,17 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>lib-tsniimash</name>
+			<type>2</type>
+			<locationURI>lib_tsniimash</locationURI>
+		</link>
+	</linkedResources>
+	<variableList>
+		<variable>
+			<name>lib_tsniimash</name>
+			<value>$%7BPARENT-1-PROJECT_LOC%7D/Common/lib-tsniimash/stm32f4</value>
+		</variable>
+	</variableList>
 </projectDescription>

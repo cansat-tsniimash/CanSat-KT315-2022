@@ -1,7 +1,28 @@
 #include "main.h"
 #include "stm32f4xx_hal.h"
+
+extern UART_HandleTypeDef huart6;
+
+/* begin structures */
+struct _gps_data_t {
+	float gps_lat;
+	float gps_lon;
+	float gps_alt;
+};
+typedef struct _gps_data_t gps_data;
+/* end structures*/
+
+/* begin interrupts */
+
+/* end interrupts */
+
 int app_main (void) {
-	wchar_t[14] data = "Hello, Sergey\n";
-	HAL_UART_Transmit(&huart6, data, data.size());
+
+	/* begin initializations */
+	gps_init();
+	/* end initializations */
+
+
+	while(1) {}
 	return 0;
 }

@@ -21,8 +21,8 @@ int app_main (void) {
 	/* begin initializations */
 	gps_init();
 	/* end initializations */
-
-
+	HAL_DMA_DeInit(hdma)
+	HAL_UART_AbortCpltCallback(huart)
 	while(1) {}
 	return 0;
 }

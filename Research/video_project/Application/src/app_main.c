@@ -114,27 +114,42 @@ void app_main(void) {
 		int16_t LSM_gyro_y;
 		int16_t LSM_gyro_z;
 
-		uint16_t num;
+		uint16_t num = 0;
 		uint16_t crc;
 
-		uint32_t time;
+		uint32_t time_from_start;
+		uint32_t time_real;
 		uint32_t BMP_pressure;
 	} rf_packet_t;
+	rf_packet_t rf_packet = {0};
 	/* End rf package structure */
 
 	/* Begin data structures */
-	struct bme280_data bme_data = {0};
+	struct bme280_data bmp_data = {0};
 
 	typedef struct lsm_data_t {
-		float temp;
-		float acc_g[3];
-		float gyro_dps[3];
+		float temperature;
+		float acc[3];
+		float gyro[3];
 	} lsm_data_t;
 	lsm_data_t lsm_data = {0};
 	/* End data structures */
 
 	while (true) {
-		bme_data = bme_read_data(&bme280);
-		lsmread(stmdev_ctx_t *ctx, float *temperature_celsius_gyro, float (*acc_g)[3], float (*gyro_dps)[3]);
+		bmp_data = bme_read_data(&bme280);
+		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+		rf_packet.flag = 0x93;
+		rf_packet.BMP_temperature = (uint8_t)bmp_data.temperature;
+		rf_packet.LSM_acc_x = (uint16_t)lsm_data.acc[0];
+		rf_packet.LSM_acc_y = (uint16_t)lsm_data.acc[1];
+		rf_packet.LSM_acc_z = (uint16_t)lsm_data.acc[2];
+		rf_packet.LSM_gyro_x = (uint16_t)lsm_data.gyro[0];
+		rf_packet.LSM_gyro_y = (uint16_t)lsm_data.gyro[1];
+		rf_packet.LSM_gyro_z = (uint16_t)lsm_data.gyro[2];
+		rf_packet.num += 1;
+		rf_packet.crc = 0;
+		//rf_packet.time_from_start = ;
+		rf_packet.BMP_pressure = (uint32_t)bmp_data.pressure;
+		rf_packet.crc = 0;
 	}
 }

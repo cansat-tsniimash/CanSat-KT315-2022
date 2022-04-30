@@ -33,7 +33,7 @@
 		<link>
 			<name>lib-tsniimash</name>
 			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/Common/lib-tsniimash/stm32f4</locationURI>
+			<location>D:/KT315-git/CanSat-KT315-2022/Common/lib-tsniimash/stm32f4</location>
 		</link>
 	</linkedResources>
 </projectDescription>

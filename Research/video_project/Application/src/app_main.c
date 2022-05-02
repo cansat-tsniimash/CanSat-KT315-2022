@@ -61,7 +61,7 @@ void app_main(void) {
 	};
 
 	//rf nrf24 descriptors
-	nrf24_rf_config_t nrf24_rf_setup = {
+	/*nrf24_rf_config_t nrf24_rf_setup = {
 		.data_rate = NRF24_DATARATE_250_KBIT,
 		.tx_power = NRF24_TXPOWER_MINUS_0_DBM,
 		.rf_channel = 50
@@ -80,7 +80,7 @@ void app_main(void) {
 		.pos_CE = 0,
 		.pos_CS = 1
 	};
-	nrf24_lower_api_config_t nrf24_lowlevel_setup = {0};
+	nrf24_lower_api_config_t nrf24_lowlevel_setup = {0};*/
 
 	//Init shift_reg_imu
 	shift_reg_init(&shift_reg_imu);
@@ -96,14 +96,14 @@ void app_main(void) {
 	bme_init_default_sr(&bme280, &bme_setup);
 	lsmset_sr(&ctx, &lsm_setup);
 	//Init rf
-	nrf24_spi_init_sr(&nrf24_lowlevel_setup, &hspi2, &nrf24_shift_reg_setup);
-	nrf24_setup_rf(&nrf24_lowlevel_setup.intf_ptr, &nrf24_rf_setup);
-	nrf24_setup_protocol(&nrf24_lowlevel_setup.intf_ptr, &nrf24_protocol_setup);
+	/*nrf24_spi_init_sr(&nrf24_lowlevel_setup, &hspi2, &nrf24_shift_reg_setup);
+	//nrf24_setup_rf(&nrf24_lowlevel_setup.intf_ptr, &nrf24_rf_setup);
+	nrf24_setup_protocol(&nrf24_lowlevel_setup.intf_ptr, &nrf24_protocol_setup);*/
 
 	/* End Init */
 
 	/* Begin rf package structure */
-	typedef struct {
+	/*typedef struct {
 		uint8_t flag;
 		uint8_t BMP_temperature;
 
@@ -114,14 +114,14 @@ void app_main(void) {
 		int16_t LSM_gyro_y;
 		int16_t LSM_gyro_z;
 
-		uint16_t num = 0;
+		uint16_t num;
 		uint16_t crc;
 
 		uint32_t time_from_start;
 		uint32_t time_real;
 		uint32_t BMP_pressure;
 	} rf_packet_t;
-	rf_packet_t rf_packet = {0};
+	rf_packet_t rf_packet = {0};*/
 	/* End rf package structure */
 
 	/* Begin data structures */
@@ -138,7 +138,7 @@ void app_main(void) {
 	while (true) {
 		bmp_data = bme_read_data(&bme280);
 		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
-		rf_packet.flag = 0x93;
+		/*rf_packet.flag = 0x93;
 		rf_packet.BMP_temperature = (uint8_t)bmp_data.temperature;
 		rf_packet.LSM_acc_x = (uint16_t)lsm_data.acc[0];
 		rf_packet.LSM_acc_y = (uint16_t)lsm_data.acc[1];
@@ -149,7 +149,10 @@ void app_main(void) {
 		rf_packet.num += 1;
 		rf_packet.crc = 0;
 		//rf_packet.time_from_start = ;
+		//rf_packet.time_real = ;
 		rf_packet.BMP_pressure = (uint32_t)bmp_data.pressure;
-		rf_packet.crc = 0;
+		rf_packet.crc = 0;*/
+		printf("temperature: %f, pressure: %f, acc_x: %f, acc_y: %f, acc_z: %f\n", bmp_data.temperature, bmp_data.pressure, lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2]);
+		HAL_Delay(150);
 	}
 }

@@ -92,6 +92,8 @@ void app_main(void) {
 		.pos_CE = 0,
 		.pos_CS = 1
 	};
+	nrf24_fifo_status_t rf_fifo_status_rx;
+	nrf24_fifo_status_t rf_fifo_status_tx;
 	nrf24_lower_api_config_t nrf24_lowlevel_setup = {0};
 
 	//Init shift_reg_imu
@@ -110,13 +112,16 @@ void app_main(void) {
 	//Init rf
 	nrf24_spi_init_sr(&nrf24_lowlevel_setup, &hspi2, &nrf24_shift_reg_setup);
 	nrf24_mode_power_down(&nrf24_lowlevel_setup);
-	nrf24_setup_rf(&nrf24_lowlevel_setup.intf_ptr, &nrf24_rf_setup);
-	nrf24_setup_protocol(&nrf24_lowlevel_setup.intf_ptr, &nrf24_protocol_setup);
+	nrf24_setup_rf(&nrf24_lowlevel_setup, &nrf24_rf_setup);
+	nrf24_setup_protocol(&nrf24_lowlevel_setup, &nrf24_protocol_setup);
+	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_setup, 0xacacacacac);
+	nrf24_pipe_rx_stop(&nrf24_lowlevel_setup, 0);
+	nrf24_mode_tx(&nrf24_lowlevel_setup);
 
 	/* End Init */
 
 	/* Begin rf package structure */
-	package_num = 0;
+	uint16_t package_num = 0;
 	typedef struct {
 		uint8_t flag;
 		uint8_t BMP_temperature;
@@ -159,6 +164,7 @@ void app_main(void) {
 	while (true) {
 		bmp_data = bme_read_data(&bme280);
 		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+
 		rf_package.flag = 0x93;
 		rf_package.BMP_temperature = (uint8_t)bmp_data.temperature;
 		rf_package.LSM_acc_x = (uint16_t)lsm_data.acc[0];
@@ -172,9 +178,17 @@ void app_main(void) {
 		//rf_package.time_real = ;
 		rf_package.BMP_pressure = (uint32_t)bmp_data.pressure;
 		rf_package_crc.pack = rf_package;
-		rf_package_crc.crc = Crc16((char*)&rf_package, sizeof(rf_package));
+		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));
+
 		printf("temperature: %f, pressure: %f, acc_x: %f, acc_y: %f, acc_z: %f\n", bmp_data.temperature, bmp_data.pressure, lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2]);
-		nrf24_fifo_write(&nrf24_lowlevel_setup, const uint8_t * packet, uint8_t packet_size, false);
+
+		nrf24_fifo_status(&nrf24_lowlevel_setup, &rf_fifo_status_rx, &rf_fifo_status_tx);
+		if (rf_fifo_status_tx == NRF24_FIFO_FULL) {
+			continue;
+		} else {
+			nrf24_fifo_write(&nrf24_lowlevel_setup, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
+		}
+
 		HAL_Delay(150);
 	}
 }

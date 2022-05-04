@@ -98,6 +98,11 @@ void app_main(void) {
 		.auto_retransmit_count = 0,
 		.auto_retransmit_delay = 0
 	};
+	nrf24_pipe_config_t nrf24_pipe_setup = {
+			.enable_auto_ack = true,
+			.address = 0xffffffffff,
+			.payload_size = -1
+	};
 	nrf24_spi_pins_sr_t nrf24_shift_reg_setup = {
 		.this = &shift_reg_rf,
 		.pos_CE = 0,
@@ -125,6 +130,8 @@ void app_main(void) {
 	nrf24_mode_standby(&nrf24_lowlevel_config);
 	nrf24_setup_rf(&nrf24_lowlevel_config, &nrf24_rf_setup);
 	nrf24_setup_protocol(&nrf24_lowlevel_config, &nrf24_protocol_setup);
+	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 0, &nrf24_pipe_setup);
+	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 1, &nrf24_pipe_setup);
 	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
 	nrf24_pipe_rx_stop(&nrf24_lowlevel_config, 0);
 	nrf24_mode_tx(&nrf24_lowlevel_config);
@@ -133,7 +140,7 @@ void app_main(void) {
 
 	/* Begin rf package structure */
 	uint16_t package_num = 0;
-	typedef struct {
+	typedef struct __attribute__((packed)) {
 		uint8_t flag;
 		uint8_t BMP_temperature;
 
@@ -151,7 +158,7 @@ void app_main(void) {
 		uint32_t BMP_pressure;
 	} rf_package_t;
 
-	typedef struct {
+	typedef struct __attribute__((packed)) {
 		rf_package_t pack;
 		uint16_t crc;
 	} rf_package_crc_t;

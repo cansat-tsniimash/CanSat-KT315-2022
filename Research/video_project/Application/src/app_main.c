@@ -12,10 +12,21 @@
 #include "nRF24L01_PL/nrf24_defs.h"
 
 extern SPI_HandleTypeDef hspi2;
-//bme
-//lsm
-//rf
-//~~ds~~
+
+/*static void dump_registers(void *intf_ptr)
+{
+	const size_t regs_count = sizeof(reg_params)/sizeof(reg_params[0]);
+	for (size_t i = 0 ; i < regs_count; i++)
+	{
+		uint8_t reg_addr = reg_params[i].addr;
+		uint8_t reg_size = reg_params[i].size;
+
+		uint8_t reg_data[5] = { 0 };
+		nrf24_read_register(intf_ptr, reg_addr, reg_data, reg_size);
+
+		print_register(reg_addr, reg_data);
+	}
+}*/
 
 unsigned short Crc16(unsigned char *buf, unsigned short len) //crc func
 {
@@ -76,14 +87,14 @@ void app_main(void) {
 	nrf24_rf_config_t nrf24_rf_setup = {
 		.data_rate = NRF24_DATARATE_250_KBIT,
 		.tx_power = NRF24_TXPOWER_MINUS_0_DBM,
-		.rf_channel = 50
+		.rf_channel = 115
 	};
 	nrf24_protocol_config_t nrf24_protocol_setup = {
 		.crc_size = NRF24_CRCSIZE_DISABLE,
 		.address_width = NRF24_ADDRES_WIDTH_5_BYTES,
 		.en_dyn_payload_size = false,
-		.en_ack_payload = false,
-		.en_dyn_ack = false,
+		.en_ack_payload = true,
+		.en_dyn_ack = true,
 		.auto_retransmit_count = 0,
 		.auto_retransmit_delay = 0
 	};
@@ -94,7 +105,7 @@ void app_main(void) {
 	};
 	nrf24_fifo_status_t rf_fifo_status_rx;
 	nrf24_fifo_status_t rf_fifo_status_tx;
-	nrf24_lower_api_config_t nrf24_lowlevel_setup = {0};
+	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
 
 	//Init shift_reg_imu
 	shift_reg_init(&shift_reg_imu);
@@ -110,13 +121,13 @@ void app_main(void) {
 	bme_init_default_sr(&bme280, &bme_setup);
 	lsmset_sr(&ctx, &lsm_setup);
 	//Init rf
-	nrf24_spi_init_sr(&nrf24_lowlevel_setup, &hspi2, &nrf24_shift_reg_setup);
-	nrf24_mode_power_down(&nrf24_lowlevel_setup);
-	nrf24_setup_rf(&nrf24_lowlevel_setup, &nrf24_rf_setup);
-	nrf24_setup_protocol(&nrf24_lowlevel_setup, &nrf24_protocol_setup);
-	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_setup, 0xacacacacac);
-	nrf24_pipe_rx_stop(&nrf24_lowlevel_setup, 0);
-	nrf24_mode_tx(&nrf24_lowlevel_setup);
+	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
+	nrf24_mode_standby(&nrf24_lowlevel_config);
+	nrf24_setup_rf(&nrf24_lowlevel_config, &nrf24_rf_setup);
+	nrf24_setup_protocol(&nrf24_lowlevel_config, &nrf24_protocol_setup);
+	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
+	nrf24_pipe_rx_stop(&nrf24_lowlevel_config, 0);
+	nrf24_mode_tx(&nrf24_lowlevel_config);
 
 	/* End Init */
 
@@ -160,11 +171,13 @@ void app_main(void) {
 	} lsm_data_t;
 	lsm_data_t lsm_data = {0};
 	/* End data structures */
-
 	while (true) {
+		/* Begin GetData */
 		bmp_data = bme_read_data(&bme280);
 		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+		/* End GetData */
 
+		/* Begin packing */
 		rf_package.flag = 0x93;
 		rf_package.BMP_temperature = (uint8_t)bmp_data.temperature;
 		rf_package.LSM_acc_x = (uint16_t)lsm_data.acc[0];
@@ -179,16 +192,33 @@ void app_main(void) {
 		rf_package.BMP_pressure = (uint32_t)bmp_data.pressure;
 		rf_package_crc.pack = rf_package;
 		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));
+		/* End packing */
 
-		printf("temperature: %f, pressure: %f, acc_x: %f, acc_y: %f, acc_z: %f\n", bmp_data.temperature, bmp_data.pressure, lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2]);
+		//UART data transmit
+		//printf("temperature: %f, pressure: %f, acc_x: %f, acc_y: %f, acc_z: %f\n", bmp_data.temperature, bmp_data.pressure, lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2]);
 
-		nrf24_fifo_status(&nrf24_lowlevel_setup, &rf_fifo_status_rx, &rf_fifo_status_tx);
-		if (rf_fifo_status_tx == NRF24_FIFO_FULL) {
-			continue;
+		/* Begin radio data transmit */
+		//dump_registers(&nrf24_lowlevel_config);
+		//int radio_status;
+		nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
+		if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
+			nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
 		} else {
-			nrf24_fifo_write(&nrf24_lowlevel_setup, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
+			HAL_Delay(100);
+			nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
 		}
 
-		HAL_Delay(150);
+		/*HAL_Delay(10);
+		nrf24_irq_get(&nrf24_lowlevel_config, &radio_status);
+		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
+		printf("irq: %d\n\n", radio_status);*/
+
+		/*nrf24_mode_tx(&nrf24_lowlevel_config);
+		HAL_Delay(1);
+		nrf24_mode_standby(&nrf24_lowlevel_config);*/
+
+		/* End radio data transmit */
+
+		//UART radio checker
 	}
 }

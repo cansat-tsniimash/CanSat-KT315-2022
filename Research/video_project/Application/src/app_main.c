@@ -44,20 +44,20 @@ void app_main(void) {
 	/* Begin Init */
 
 	//imu bme service struct
-	struct bme280_dev bme280 = {0};
+	//struct bme280_dev bme280 = {0};
 
 	//imu lsm service struct
-	stmdev_ctx_t ctx = {0};
+	//stmdev_ctx_t ctx = {0};
 
 	//imu shift register descriptor
-	shift_reg_t shift_reg_imu = {
+	/*shift_reg_t shift_reg_imu = {
 		.bus = &hspi2,
 		.latch_port = GPIOC,
 		.latch_pin = GPIO_PIN_1,
 		.oe_port = GPIOC,
 		.oe_pin = GPIO_PIN_13,
 		.value = 0
-	};
+	};*/
 
 	//rf shift register descriptor
 	shift_reg_t shift_reg_rf = {
@@ -70,38 +70,38 @@ void app_main(void) {
 	};
 
 	//imu bme descriptor
-	bme_spi_intf_sr bme_setup = {
+	/*bme_spi_intf_sr bme_setup = {
 		.sr_pin = 2,
 		.spi = &hspi2,
 		.sr = &shift_reg_imu
-	};
+	};*/
 
 	//imu lsm descriptor
-	lsm_spi_intf_sr lsm_setup = {
+	/*lsm_spi_intf_sr lsm_setup = {
 		.sr_pin = 4,
 		.spi = &hspi2,
 		.sr = &shift_reg_imu
-	};
+	};*/
 
 	//rf nrf24 descriptors
 	nrf24_rf_config_t nrf24_rf_setup = {
 		.data_rate = NRF24_DATARATE_250_KBIT,
-		.tx_power = NRF24_TXPOWER_MINUS_0_DBM,
-		.rf_channel = 115
+		.tx_power = NRF24_TXPOWER_MINUS_18_DBM,
+		.rf_channel = 116
 	};
 	nrf24_protocol_config_t nrf24_protocol_setup = {
 		.crc_size = NRF24_CRCSIZE_DISABLE,
 		.address_width = NRF24_ADDRES_WIDTH_5_BYTES,
 		.en_dyn_payload_size = false,
-		.en_ack_payload = true,
-		.en_dyn_ack = true,
+		.en_ack_payload = false,
+		.en_dyn_ack = false,
 		.auto_retransmit_count = 0,
 		.auto_retransmit_delay = 0
 	};
 	nrf24_pipe_config_t nrf24_pipe_setup = {
-			.enable_auto_ack = true,
-			.address = 0xffffffffff,
-			.payload_size = -1
+		.enable_auto_ack = true,
+		.address = 0xacacacacac,
+		.payload_size = -1
 	};
 	nrf24_spi_pins_sr_t nrf24_shift_reg_setup = {
 		.this = &shift_reg_rf,
@@ -113,28 +113,28 @@ void app_main(void) {
 	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
 
 	//Init shift_reg_imu
-	shift_reg_init(&shift_reg_imu);
+	/*shift_reg_init(&shift_reg_imu);
 	shift_reg_oe(&shift_reg_imu, true);
 	shift_reg_write_8(&shift_reg_imu, 0xFF);
-	shift_reg_oe(&shift_reg_imu, false);
+	shift_reg_oe(&shift_reg_imu, false);*/
 	//Init shift_reg_rf
 	shift_reg_init(&shift_reg_rf);
 	shift_reg_oe(&shift_reg_rf, true);
 	shift_reg_write_8(&shift_reg_rf, 0xFF);
 	shift_reg_oe(&shift_reg_rf, false);
 	//Init imu
-	bme_init_default_sr(&bme280, &bme_setup);
-	lsmset_sr(&ctx, &lsm_setup);
+	/*bme_init_default_sr(&bme280, &bme_setup);
+	lsmset_sr(&ctx, &lsm_setup);*/
 	//Init rf
 	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
 	nrf24_mode_standby(&nrf24_lowlevel_config);
 	nrf24_setup_rf(&nrf24_lowlevel_config, &nrf24_rf_setup);
 	nrf24_setup_protocol(&nrf24_lowlevel_config, &nrf24_protocol_setup);
+	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
 	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 0, &nrf24_pipe_setup);
 	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 1, &nrf24_pipe_setup);
-	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
-	nrf24_pipe_rx_stop(&nrf24_lowlevel_config, 0);
-	nrf24_mode_tx(&nrf24_lowlevel_config);
+	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0);
+	nrf24_mode_standby(&nrf24_lowlevel_config);
 
 	/* End Init */
 
@@ -144,12 +144,12 @@ void app_main(void) {
 		uint8_t flag;
 		uint8_t BMP_temperature;
 
-		int16_t LSM_acc_x;
-		int16_t LSM_acc_y;
-		int16_t LSM_acc_z;
-		int16_t LSM_gyro_x;
-		int16_t LSM_gyro_y;
-		int16_t LSM_gyro_z;
+		uint16_t LSM_acc_x;
+		uint16_t LSM_acc_y;
+		uint16_t LSM_acc_z;
+		uint16_t LSM_gyro_x;
+		uint16_t LSM_gyro_y;
+		uint16_t LSM_gyro_z;
 
 		uint16_t num;
 
@@ -169,36 +169,36 @@ void app_main(void) {
 	/* End rf package structure */
 
 	/* Begin data structures */
-	struct bme280_data bmp_data = {0};
+	/*struct bme280_data bmp_data = {0};
 
 	typedef struct lsm_data_t {
 		float temperature;
 		float acc[3];
 		float gyro[3];
 	} lsm_data_t;
-	lsm_data_t lsm_data = {0};
+	lsm_data_t lsm_data = {0};*/
 	/* End data structures */
 	while (true) {
 		/* Begin GetData */
-		bmp_data = bme_read_data(&bme280);
-		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+		/*bmp_data = bme_read_data(&bme280);
+		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);*/
 		/* End GetData */
 
 		/* Begin packing */
-		rf_package.flag = 0x93;
-		rf_package.BMP_temperature = (uint8_t)bmp_data.temperature;
-		rf_package.LSM_acc_x = (uint16_t)lsm_data.acc[0];
-		rf_package.LSM_acc_y = (uint16_t)lsm_data.acc[1];
-		rf_package.LSM_acc_z = (uint16_t)lsm_data.acc[2];
-		rf_package.LSM_gyro_x = (uint16_t)lsm_data.gyro[0];
-		rf_package.LSM_gyro_y = (uint16_t)lsm_data.gyro[1];
-		rf_package.LSM_gyro_z = (uint16_t)lsm_data.gyro[2];
+		/*rf_package.flag = 0x93;
+		rf_package.BMP_temperature = (uint8_t)(bmp_data.temperature * 10);
+		rf_package.LSM_acc_x = (int16_t)(lsm_data.acc[0] * 1000);
+		rf_package.LSM_acc_y = (int16_t)(lsm_data.acc[1] * 1000);
+		rf_package.LSM_acc_z = (int16_t)(lsm_data.acc[2] * 1000);
+		rf_package.LSM_gyro_x = (int16_t)(lsm_data.gyro[0] * 1000);
+		rf_package.LSM_gyro_y = (int16_t)(lsm_data.gyro[1] * 1000);
+		rf_package.LSM_gyro_z = (int16_t)(lsm_data.gyro[2] * 1000);
 		package_num++;
 		rf_package.time_from_start = HAL_GetTick();
 		//rf_package.time_real = ;
 		rf_package.BMP_pressure = (uint32_t)bmp_data.pressure;
 		rf_package_crc.pack = rf_package;
-		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));
+		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));*/
 		/* End packing */
 
 		//UART data transmit
@@ -210,6 +210,9 @@ void app_main(void) {
 		nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
 		if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
 			nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
+			nrf24_mode_tx(&nrf24_lowlevel_config);
+			HAL_Delay(50);
+			nrf24_mode_standby(&nrf24_lowlevel_config);
 		} else {
 			HAL_Delay(100);
 			nrf24_fifo_flush_tx(&nrf24_lowlevel_config);

@@ -13,6 +13,45 @@
 
 extern SPI_HandleTypeDef hspi2;
 
+/* Begin rf package structure */
+
+typedef struct __attribute__((packed)) {
+	uint8_t flag;
+	uint8_t BMP_temperature;
+
+	uint16_t LSM_acc_x;
+	uint16_t LSM_acc_y;
+	uint16_t LSM_acc_z;
+	uint16_t LSM_gyro_x;
+	uint16_t LSM_gyro_y;
+	uint16_t LSM_gyro_z;
+
+	uint16_t num;
+
+	uint32_t time_from_start;
+	//uint32_t time_real;
+	uint32_t BMP_pressure;
+} rf_package_t;
+
+typedef struct __attribute__((packed)) {
+	rf_package_t pack;
+	uint16_t crc;
+} rf_package_crc_t;
+
+/* End rf package structure  */
+
+
+/* Begin data structures */
+
+typedef struct {
+		float temperature;
+		float acc[3];
+		float gyro[3];
+} lsm_data_t;
+
+/* End data structures */
+
+
 /*static void dump_registers(void *intf_ptr)
 {
 	const size_t regs_count = sizeof(reg_params)/sizeof(reg_params[0]);
@@ -28,6 +67,7 @@ extern SPI_HandleTypeDef hspi2;
 	}
 }*/
 
+
 unsigned short Crc16(unsigned char *buf, unsigned short len) //crc func
 {
 	unsigned short crc = 0xFFFF;
@@ -40,7 +80,30 @@ unsigned short Crc16(unsigned char *buf, unsigned short len) //crc func
 	return crc;
 }
 
+rf_package_crc_t pack(struct bme280_data *bmp_data, lsm_data_t *lsm_data, uint16_t package_num) {
+	rf_package_t rf_package = {
+		.flag = 0x93,
+		.BMP_temperature = (uint8_t)(bmp_data->temperature * 10),
+		.LSM_acc_x = (int16_t)(lsm_data->acc[0] * 1000),
+		.LSM_acc_y = (int16_t)(lsm_data->acc[1] * 1000),
+		.LSM_acc_z = (int16_t)(lsm_data->acc[2] * 1000),
+		.LSM_gyro_x = (int16_t)(lsm_data->gyro[0] * 1000),
+		.LSM_gyro_y = (int16_t)(lsm_data->gyro[1] * 1000),
+		.LSM_gyro_z = (int16_t)(lsm_data->gyro[2] * 1000),
+		.num = package_num,
+		.time_from_start = HAL_GetTick(),
+		//.time_real = ,
+		.BMP_pressure = (uint32_t)bmp_data->pressure
+	};
+	rf_package_crc_t rf_package_crc = {
+		.pack = rf_package,
+		.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package))
+	};
+	return rf_package_crc;
+}
+
 void app_main(void) {
+
 	/* Begin Init */
 
 	//imu bme service struct
@@ -117,17 +180,20 @@ void app_main(void) {
 	shift_reg_oe(&shift_reg_imu, true);
 	shift_reg_write_8(&shift_reg_imu, 0xFF);
 	shift_reg_oe(&shift_reg_imu, false);
+
 	//Init shift_reg_rf
 	shift_reg_init(&shift_reg_rf);
 	shift_reg_oe(&shift_reg_rf, true);
 	shift_reg_write_8(&shift_reg_rf, 0xFF);
 	//shift_reg_oe(&shift_reg_rf, false);
+
 	//Init imu
 	bme_init_default_sr(&bme280, &bme_setup);
 	lsmset_sr(&ctx, &lsm_setup);
+
 	//Init rf
 	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
-	nrf24_mode_power_down(&nrf24_lowlevel_config);
+	nrf24_mode_standby(&nrf24_lowlevel_config);
 	nrf24_setup_rf(&nrf24_lowlevel_config, &nrf24_rf_setup);
 	nrf24_setup_protocol(&nrf24_lowlevel_config, &nrf24_protocol_setup);
 	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
@@ -137,78 +203,43 @@ void app_main(void) {
 
 	/* End Init */
 
-	/* Begin rf package structure */
-	typedef struct __attribute__((packed)) {
-		uint8_t flag;
-		uint8_t BMP_temperature;
+	/* Begin rf package structs*/
 
-		uint16_t LSM_acc_x;
-		uint16_t LSM_acc_y;
-		uint16_t LSM_acc_z;
-		uint16_t LSM_gyro_x;
-		uint16_t LSM_gyro_y;
-		uint16_t LSM_gyro_z;
-
-		uint16_t num;
-
-		uint32_t time_from_start;
-		//uint32_t time_real;
-		uint32_t BMP_pressure;
-	} rf_package_t;
-
-	typedef struct __attribute__((packed)) {
-		rf_package_t pack;
-		uint16_t crc;
-	} rf_package_crc_t;
-
-	rf_package_t rf_package = {0};
 	rf_package_crc_t rf_package_crc = {0};
-	int package_num = 0;
-	/* End rf package structure */
+	uint16_t package_num = 0;
+
+	/* End rf package structs*/
+
 
 	/* Begin data structures */
-	struct bme280_data bmp_data = {0};
 
-	typedef struct lsm_data_t {
-		float temperature;
-		float acc[3];
-		float gyro[3];
-	} lsm_data_t;
+	struct bme280_data bmp_data = {0};
 	lsm_data_t lsm_data = {0};
+
 	/* End data structures */
 
+
 	while (true) {
+
 		/* Begin GetData */
+
 		bmp_data = bme_read_data(&bme280);
 		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+
 		/* End GetData */
 
-		/* Begin packing */
-		rf_package.flag = 0x93;
-		rf_package.BMP_temperature = (uint8_t)(bmp_data.temperature * 10);
-		rf_package.LSM_acc_x = (int16_t)(lsm_data.acc[0] * 1000);
-		rf_package.LSM_acc_y = (int16_t)(lsm_data.acc[1] * 1000);
-		rf_package.LSM_acc_z = (int16_t)(lsm_data.acc[2] * 1000);
-		rf_package.LSM_gyro_x = (int16_t)(lsm_data.gyro[0] * 1000);
-		rf_package.LSM_gyro_y = (int16_t)(lsm_data.gyro[1] * 1000);
-		rf_package.LSM_gyro_z = (int16_t)(lsm_data.gyro[2] * 1000);
-		rf_package.num = package_num;
-		package_num++;
-		rf_package.time_from_start = HAL_GetTick();
-		//rf_package.time_real = ;
-		rf_package.BMP_pressure = (uint32_t)bmp_data.pressure;
-		rf_package_crc.pack = rf_package;
-		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));
-		/* End packing */
+
 
 		//UART data transmit
 		//printf("temperature: %f, pressure: %f, acc_x: %f, acc_y: %f, acc_z: %f\n", bmp_data.temperature, bmp_data.pressure, lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2]);
 
+
 		/* Begin radio data transmit */
-		//dump_registers(&nrf24_lowlevel_config);
-		//int radio_status;
+
 		nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
 		if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
+			rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
+			package_num++;
 			nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
 			nrf24_mode_tx(&nrf24_lowlevel_config);
 			HAL_Delay(50);
@@ -218,8 +249,8 @@ void app_main(void) {
 			nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
 		}
 		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
+
 		/* End radio data transmit */
 
-		//UART radio checker
 	}
 }

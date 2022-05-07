@@ -44,20 +44,20 @@ void app_main(void) {
 	/* Begin Init */
 
 	//imu bme service struct
-	//struct bme280_dev bme280 = {0};
+	struct bme280_dev bme280 = {0};
 
 	//imu lsm service struct
-	//stmdev_ctx_t ctx = {0};
+	stmdev_ctx_t ctx = {0};
 
 	//imu shift register descriptor
-	/*shift_reg_t shift_reg_imu = {
+	shift_reg_t shift_reg_imu = {
 		.bus = &hspi2,
 		.latch_port = GPIOC,
 		.latch_pin = GPIO_PIN_1,
 		.oe_port = GPIOC,
 		.oe_pin = GPIO_PIN_13,
 		.value = 0
-	};*/
+	};
 
 	//rf shift register descriptor
 	shift_reg_t shift_reg_rf = {
@@ -70,23 +70,23 @@ void app_main(void) {
 	};
 
 	//imu bme descriptor
-	/*bme_spi_intf_sr bme_setup = {
+	bme_spi_intf_sr bme_setup = {
 		.sr_pin = 2,
 		.spi = &hspi2,
 		.sr = &shift_reg_imu
-	};*/
+	};
 
 	//imu lsm descriptor
-	/*lsm_spi_intf_sr lsm_setup = {
+	lsm_spi_intf_sr lsm_setup = {
 		.sr_pin = 4,
 		.spi = &hspi2,
 		.sr = &shift_reg_imu
-	};*/
+	};
 
 	//rf nrf24 descriptors
 	nrf24_rf_config_t nrf24_rf_setup = {
 		.data_rate = NRF24_DATARATE_250_KBIT,
-		.tx_power = NRF24_TXPOWER_MINUS_18_DBM,
+		.tx_power = NRF24_TXPOWER_MINUS_0_DBM,
 		.rf_channel = 116
 	};
 	nrf24_protocol_config_t nrf24_protocol_setup = {
@@ -113,18 +113,18 @@ void app_main(void) {
 	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
 
 	//Init shift_reg_imu
-	/*shift_reg_init(&shift_reg_imu);
+	shift_reg_init(&shift_reg_imu);
 	shift_reg_oe(&shift_reg_imu, true);
 	shift_reg_write_8(&shift_reg_imu, 0xFF);
-	shift_reg_oe(&shift_reg_imu, false);*/
+	shift_reg_oe(&shift_reg_imu, false);
 	//Init shift_reg_rf
 	shift_reg_init(&shift_reg_rf);
 	shift_reg_oe(&shift_reg_rf, true);
 	shift_reg_write_8(&shift_reg_rf, 0xFF);
 	shift_reg_oe(&shift_reg_rf, false);
 	//Init imu
-	/*bme_init_default_sr(&bme280, &bme_setup);
-	lsmset_sr(&ctx, &lsm_setup);*/
+	bme_init_default_sr(&bme280, &bme_setup);
+	lsmset_sr(&ctx, &lsm_setup);
 	//Init rf
 	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
 	nrf24_mode_standby(&nrf24_lowlevel_config);
@@ -169,23 +169,23 @@ void app_main(void) {
 	/* End rf package structure */
 
 	/* Begin data structures */
-	/*struct bme280_data bmp_data = {0};
+	struct bme280_data bmp_data = {0};
 
 	typedef struct lsm_data_t {
 		float temperature;
 		float acc[3];
 		float gyro[3];
 	} lsm_data_t;
-	lsm_data_t lsm_data = {0};*/
+	lsm_data_t lsm_data = {0};
 	/* End data structures */
 	while (true) {
 		/* Begin GetData */
-		/*bmp_data = bme_read_data(&bme280);
-		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);*/
+		bmp_data = bme_read_data(&bme280);
+		lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
 		/* End GetData */
 
 		/* Begin packing */
-		/*rf_package.flag = 0x93;
+		rf_package.flag = 0x93;
 		rf_package.BMP_temperature = (uint8_t)(bmp_data.temperature * 10);
 		rf_package.LSM_acc_x = (int16_t)(lsm_data.acc[0] * 1000);
 		rf_package.LSM_acc_y = (int16_t)(lsm_data.acc[1] * 1000);
@@ -198,7 +198,7 @@ void app_main(void) {
 		//rf_package.time_real = ;
 		rf_package.BMP_pressure = (uint32_t)bmp_data.pressure;
 		rf_package_crc.pack = rf_package;
-		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));*/
+		rf_package_crc.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package));
 		/* End packing */
 
 		//UART data transmit

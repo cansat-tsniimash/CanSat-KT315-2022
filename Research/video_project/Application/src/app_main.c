@@ -149,7 +149,7 @@ void app_main(void) {
 	//rf nrf24 descriptors
 	nrf24_rf_config_t nrf24_rf_setup = {
 		.data_rate = NRF24_DATARATE_250_KBIT,
-		.tx_power = NRF24_TXPOWER_MINUS_0_DBM,
+		.tx_power = NRF24_TXPOWER_MINUS_18_DBM,
 		.rf_channel = 116
 	};
 	nrf24_protocol_config_t nrf24_protocol_setup = {
@@ -162,7 +162,7 @@ void app_main(void) {
 		.auto_retransmit_delay = 0
 	};
 	nrf24_pipe_config_t nrf24_pipe_setup = {
-		.enable_auto_ack = true,
+		.enable_auto_ack = false,
 		.address = 0xacacacacac,
 		.payload_size = -1
 	};
@@ -185,7 +185,7 @@ void app_main(void) {
 	shift_reg_init(&shift_reg_rf);
 	shift_reg_oe(&shift_reg_rf, true);
 	shift_reg_write_8(&shift_reg_rf, 0xFF);
-	//shift_reg_oe(&shift_reg_rf, false);
+	shift_reg_oe(&shift_reg_rf, false);
 
 	//Init imu
 	bme_init_default_sr(&bme280, &bme_setup);
@@ -200,7 +200,7 @@ void app_main(void) {
 	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 0, &nrf24_pipe_setup);
 	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 1, &nrf24_pipe_setup);
 	nrf24_mode_standby(&nrf24_lowlevel_config);
-
+	nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
 	/* End Init */
 
 	/* Begin rf package structs*/
@@ -236,20 +236,28 @@ void app_main(void) {
 
 		/* Begin radio data transmit */
 
+		int volatile a = 0;
+		nrf24_irq_get(&nrf24_lowlevel_config, &a);
+		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
+		nrf24_irq_get(&nrf24_lowlevel_config, &a);
+
 		nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
+		printf("%d\n%d\n\n", package_num, rf_fifo_status_tx);
 		if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
 			rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
 			package_num++;
 			nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
 			nrf24_mode_tx(&nrf24_lowlevel_config);
-			HAL_Delay(50);
+			HAL_Delay(3);
 			nrf24_mode_standby(&nrf24_lowlevel_config);
 		} else {
-			HAL_Delay(100);
 			nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
+			HAL_Delay(100);
 		}
-		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 
+		nrf24_irq_get(&nrf24_lowlevel_config, &a);
+		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
+		nrf24_irq_get(&nrf24_lowlevel_config, &a);
 		/* End radio data transmit */
 
 	}

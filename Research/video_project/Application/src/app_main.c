@@ -258,6 +258,7 @@ void app_main(void) {
 		nrf24_irq_get(&nrf24_lowlevel_config, &a);
 		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 		nrf24_irq_get(&nrf24_lowlevel_config, &a);
+
 		/* End radio data transmit */
 
 	}

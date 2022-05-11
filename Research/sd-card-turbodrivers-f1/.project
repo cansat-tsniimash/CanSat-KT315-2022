@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>main_project</name>
+	<name>sd-card-turbodrivers-f1</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -29,17 +29,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>lib-tsniimash</name>
-			<type>2</type>
-			<locationURI>$%7BPARENT-2-PROJECT_LOC%7D/Common/lib-tsniimash/stm32f4</locationURI>
-		</link>
-	</linkedResources>
-	<variableList>
-		<variable>
-			<name>lib_tsniimash</name>
-			<value>$%7BPARENT-1-PROJECT_LOC%7D/Common/lib-tsniimash/stm32f4</value>
-		</variable>
-	</variableList>
 </projectDescription>

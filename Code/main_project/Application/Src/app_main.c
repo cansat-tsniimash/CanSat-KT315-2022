@@ -1,4 +1,4 @@
-#include "app_main.h"
+#include "../app_main.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -12,9 +12,7 @@
 #include "nRF24L01_PL/nrf24_lower_api_stm32.h"
 #include "nRF24L01_PL/nrf24_defs.h"
 
-extern UART_HandleTypeDef huart6;
 extern SPI_HandleTypeDef hspi2;
-
 
 /* Begin data structures */
 
@@ -239,7 +237,7 @@ void app_main (void) {
 
 
 	// loop
-	while(True) {
+	while(true) {
 
 
 		/* Begin GetData */
@@ -272,7 +270,7 @@ void app_main (void) {
 
 		/* Begin radio data transmit */
 
-			int volatile a = 0;
+			int a = 0;
 			nrf24_irq_get(&nrf24_lowlevel_config, &a);
 			nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 			nrf24_irq_get(&nrf24_lowlevel_config, &a);

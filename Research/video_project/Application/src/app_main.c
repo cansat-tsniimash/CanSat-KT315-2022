@@ -102,7 +102,7 @@ rf_package_crc_t pack(struct bme280_data *bmp_data, lsm_data_t *lsm_data, uint16
 	return rf_package_crc;
 }
 
-void app_main(void) {
+void app_main() {
 
 	/* Begin Init */
 

@@ -1,6 +1,6 @@
-/.metadata/
-/.settings/
+**/.metadata/
+**/.settings/
 
-/Debug/
+**/Debug/
 
-/Release/
+**/Release/

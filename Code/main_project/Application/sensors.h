@@ -1,11 +1,29 @@
 #ifndef SENSORS_H_
 #define SENSORS_H_
 
+typedef struct {
+	double temperature;
+	double pressure;
+} bmp_data_t;
 
-//Func for counting CrcSum for package
-unsigned short Crc16(unsigned char *buf, unsigned short len);
+typedef struct {
+	float temperature;
+	float mag[3];
+} lis_data_t;
 
-//Func for packing data that will be sent by radio
-rf_package_crc_t pack(struct bme280_data *bmp_data, lsm_data_t *lsm_data, uint16_t package_num);
+typedef struct {
+	float temperature;
+	float acc[3];
+	float gyro[3];
+} lsm_data_t;
+
+typedef struct {
+	float gps_lat;
+	float gps_lon;
+	float gps_alt;
+
+} gps_data_t;
+
+void app_work();
 
 #endif /* SENSORS_H_ */

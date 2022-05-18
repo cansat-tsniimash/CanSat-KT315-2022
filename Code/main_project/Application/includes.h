@@ -8,6 +8,7 @@
 #include "Shift_Register/shift_reg.h"
 #include "BME280/DriverForBME280.h"
 #include "LSM6DS3/DLSM.h"
+#include "LIS3MDL/DLIS3.h"
 #include "ATGM336H/nmea_gps.h"
 
 #include "nRF24L01_PL/nrf24_upper_api.h"

@@ -2199,7 +2199,7 @@ Discarded input sections
                 0x0000000000000000       0x32 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .text.ds18b20_read_raw_temperature
                 0x0000000000000000       0x8a ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
- .debug_info    0x0000000000000000      0xb07 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
+ .debug_info    0x0000000000000000      0xb08 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .debug_abbrev  0x0000000000000000      0x26f ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .debug_aranges
                 0x0000000000000000       0xb0 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
@@ -2243,7 +2243,7 @@ Discarded input sections
  .debug_macro   0x0000000000000000       0x89 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .debug_macro   0x0000000000000000      0x126 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .debug_line    0x0000000000000000      0xaac ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
- .debug_str     0x0000000000000000    0x7d5a2 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
+ .debug_str     0x0000000000000000    0x7d5a8 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .comment       0x0000000000000000       0x54 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .debug_frame   0x0000000000000000      0x2c4 ./lib-tsniimash/1Wire(DS18B20)/src/one_wire.o
  .ARM.attributes

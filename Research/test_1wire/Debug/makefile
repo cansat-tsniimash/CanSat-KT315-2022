@@ -70,8 +70,8 @@ all: main-build
 main-build: test_1wire.elf secondary-outputs
 
 # Tool invocations
-test_1wire.elf: $(OBJS) $(USER_OBJS) D:\CanSat\Git\CanSat-KT315-2022\Research\test\STM32F401RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "test_1wire.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\CanSat\Git\CanSat-KT315-2022\Research\test\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="test_1wire.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+test_1wire.elf: $(OBJS) $(USER_OBJS) D:\CanSat\Git\CanSat-KT315-2022\Research\test_1wire\STM32F401RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "test_1wire.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"D:\CanSat\Git\CanSat-KT315-2022\Research\test_1wire\STM32F401RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="test_1wire.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

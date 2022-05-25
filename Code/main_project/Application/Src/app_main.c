@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #include "app_main.h"
 #include "includes.h"
 
@@ -5,9 +6,31 @@
 #include "bmp280.h"
 #include "lis3mdl.h"
 #include "lsm6ds3.h"
+=======
+#include "../app_main.h"
+#include "../includes.h"
+#include "../initializations.h"
+#include "../sensors.h"
 
-extern SPI_HandleTypeDef hspi2;
 
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stm32f4xx_hal.h>
+
+#include "BME280/DriverForBME280.h"
+#include "LSM6DS3/DLSM.h"
+#include "ATGM336H/nmea_gps.h"
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
+
+
+<<<<<<< HEAD
+=======
+/* Begin data structures */
+
+
+
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 /*struct minmea_sentence_gga {
     struct minmea_time time;
     struct minmea_float latitude;
@@ -25,10 +48,32 @@ extern SPI_HandleTypeDef hspi2;
 //void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //
 //}
+<<<<<<< HEAD
+=======
+
+
+
+
+/* Begin service structures */
+
+
+//imu bmp service structure
+struct bme280_dev bmp280 = {0};
+
+//imu lis service structure
+stmdev_ctx_t lis_ctx = {0};
+
+//imu lsm service structure
+stmdev_ctx_t lsm_ctx = {0};
+
+
+/* End service structures */
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 
 void app_main (void) {
 
+<<<<<<< HEAD
 
 	/* Begin Init */
 
@@ -46,12 +91,15 @@ void app_main (void) {
 	//LIS3MDL
 	lis_spi_intf_sr lis_setup = lis_create_descriptor(lis_conf);
 	stmdev_ctx_t lis = lis_init(&lis_setup);
+=======
+	//Init
+	//app_init();
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 	//LSM6DS3
 	lsm_spi_intf_sr lsm_setup = lsm_create_descriptor(lsm_conf);
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
-	/* End Init */
 
 
 
@@ -68,11 +116,16 @@ void app_main (void) {
 
 	/* Begin data structures */
 
+<<<<<<< HEAD
 	bmp_data_t bmp_data = {0};
 
 	lis_data_t lis_data = {0};
 
 	lsm_data_t lsm_data = {0};
+=======
+	//struct bme280_data bmp_data = {0};
+	//lsm_data_t lsm_data = {0};
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 	uint16_t ds_temperature = 0;
 
@@ -83,8 +136,19 @@ void app_main (void) {
 	while(true) {
 
 		// Work~~ OwO
+<<<<<<< HEAD
 
 		printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
+=======
+		//app_work();
+
+		/* Begin GetData */
+
+			//bmp_data = bme_read_data(&bme280);
+			//lsmread(&lsm_ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+
+		/* End GetData */
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 
 		/* Begin working with GNSS */
@@ -106,5 +170,12 @@ void app_main (void) {
 
 		/* End working with GNSS */
 
+<<<<<<< HEAD
+=======
+
+
+
+
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 	}
 }

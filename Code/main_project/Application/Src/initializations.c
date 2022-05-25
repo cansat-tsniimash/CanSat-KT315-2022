@@ -5,9 +5,58 @@ extern SPI_HandleTypeDef hspi2;
 extern struct bme280_dev bmp280;
 extern stmdev_ctx_t lis_ctx;
 extern stmdev_ctx_t lsm_ctx;
+<<<<<<< HEAD
 extern ds18b20_t ds18b20;
 
 void app_init() {
+=======
+
+
+void app_init(void) {
+
+
+	//imu shift register descriptor
+	shift_reg_t shift_reg_imu = {
+		.bus = &hspi2,
+		.latch_port = GPIOC,
+		.latch_pin = GPIO_PIN_1,
+		.oe_port = GPIOC,
+		.oe_pin = GPIO_PIN_13,
+		.value = 0
+	};
+
+	//rf shift register descriptor
+	shift_reg_t shift_reg_rf = {
+		.bus = &hspi2,
+		.latch_port = GPIOC,
+		.latch_pin = GPIO_PIN_4,
+		.oe_port = GPIOC,
+		.oe_pin = GPIO_PIN_5,
+		.value = 0
+	};
+
+	//imu bmp descriptor
+	bme_spi_intf_sr bmp_setup = {
+		.sr_pin = 2,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
+
+	//imu lis descriptor
+	lis_spi_intf_sr lis_setup = {
+		.sr_pin = 3,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
+
+	//imu lsm descriptor
+	lsm_spi_intf_sr lsm_setup = {
+		.sr_pin = 4,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
+
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 	//rf nrf24 descriptors
 	nrf24_rf_config_t nrf24_rf_setup = {
@@ -39,6 +88,7 @@ void app_init() {
 	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
 
 
+<<<<<<< HEAD
 	//Init DS18B20
 
 
@@ -49,6 +99,32 @@ void app_init() {
 	//LL_DMA_EnableStream(DMA2, DMA2_Stream1);
 	//LL_USART_EnableDMAReq_RX(USART6);
 	//gps_init();
+=======
+	//Init shift_reg_imu
+	shift_reg_init(&shift_reg_imu);
+	shift_reg_oe(&shift_reg_imu, true);
+	shift_reg_write_8(&shift_reg_imu, 0xFF);
+	shift_reg_oe(&shift_reg_imu, false);
+
+	//Init shift_reg_rf
+	shift_reg_init(&shift_reg_rf);
+	shift_reg_oe(&shift_reg_rf, true);
+	shift_reg_write_8(&shift_reg_rf, 0xFF);
+	shift_reg_oe(&shift_reg_rf, false);
+
+	//Init imu
+	bme_init_default_sr(&bmp280, &bmp_setup);
+	lisset_sr(&lis_ctx, &lis_setup);
+	lsmset_sr(&lsm_ctx, &lsm_setup);
+
+	//Init GNSS
+	static uint8_t gps_cycle_buffer[500];
+	LL_DMA_ConfigAddresses(DMA2, DMA2_Stream1, USART6->DR, gps_cycle_buffer, DMA_PERIPH_TO_MEMORY);
+	LL_DMA_SetDataLength(DMA2, DMA2_Stream1, sizeof(gps_cycle_buffer)*sizeof(gps_cycle_buffer[0]));
+	LL_DMA_EnableStream(DMA2, DMA2_Stream1);
+	LL_USART_EnableDMAReq_RX(USART6);
+	gps_init();
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 	//Init rf
 	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
@@ -61,4 +137,10 @@ void app_init() {
 	nrf24_mode_standby(&nrf24_lowlevel_config);
 	nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
 
+<<<<<<< HEAD
+=======
+	//Init dosimeter
+
+
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 }

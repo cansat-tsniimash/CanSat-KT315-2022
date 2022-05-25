@@ -14,8 +14,11 @@ unsigned short Crc16(unsigned char *buf, unsigned short len) {
 	return crc;
 }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 /*void send_rf_package (nrf24_lower_api_config_t *nrf24_lowlevel_config) {
 	nrf24_fifo_status(nrf24_lowlevel_config, rf_fifo_status_rx, rf_fifo_status_tx);
 	if (rf_fifo_status_tx != NRF24_FIFO_FULL) {

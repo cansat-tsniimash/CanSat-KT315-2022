@@ -391,6 +391,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Dosimeter_GPIO_Port, &GPIO_InitStruct);
+<<<<<<< HEAD
 
   /*Configure GPIO pins : PC8 PC9 PC10 PC11
                            PC12 */
@@ -401,6 +402,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
   GPIO_InitStruct.Alternate = GPIO_AF12_SDIO;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+=======
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
   /*Configure GPIO pins : PA8 PA9 */
   GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
@@ -415,6 +418,7 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
+<<<<<<< HEAD
   /*Configure GPIO pin : PD2 */
   GPIO_InitStruct.Pin = GPIO_PIN_2;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -423,6 +427,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Alternate = GPIO_AF12_SDIO;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+=======
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI4_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(EXTI4_IRQn);

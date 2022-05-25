@@ -5,6 +5,7 @@
 extern struct bme280_dev bmp280;
 extern stmdev_ctx_t lis_ctx;
 extern stmdev_ctx_t lsm_ctx;
+<<<<<<< HEAD
 extern ds18b20_t ds18b20;
 
 uint16_t ds18b20_read(ds18b20_t *ds18b20) {
@@ -16,6 +17,11 @@ uint16_t ds18b20_read(ds18b20_t *ds18b20) {
 }
 
 sensors_t app_work() {
+=======
+
+
+void app_work() {
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 
 	/* Begin data structures */
@@ -27,8 +33,11 @@ sensors_t app_work() {
 
 	lsm_data_t lsm_data = {0};
 
+<<<<<<< HEAD
 	uint16_t ds_data = 0;
 
+=======
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 	/* Begin data structures */
 
 	//BMP
@@ -41,6 +50,7 @@ sensors_t app_work() {
 
 	//LSM
 	lsmread(&lsm_ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
+<<<<<<< HEAD
 
 	//DS18B20
 	ds_data = ds18b20_read(&ds18b20);
@@ -53,4 +63,6 @@ sensors_t app_work() {
 	};
 
 	return result;
+=======
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 }

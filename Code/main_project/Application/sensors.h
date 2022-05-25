@@ -24,6 +24,10 @@ typedef struct {
 
 } gps_data_t;
 
+<<<<<<< HEAD
 sensors_t app_work();
+=======
+void app_work();
+>>>>>>> 8a7e5a19c2d7f0e0e4f4e7611d544e2697a211c4
 
 #endif /* SENSORS_H_ */

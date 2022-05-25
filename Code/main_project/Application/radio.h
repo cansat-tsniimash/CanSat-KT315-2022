@@ -1,7 +1,7 @@
 #ifndef RADIO_H_
 #define RADIO_H_
 
-#include <stdint.h>
+#include "includes.h"
 
 /* Begin RF Structures */
 
@@ -37,7 +37,22 @@ typedef struct __attribute__((packed)) {
 
 
 
-typedef struct __attribute__((packed)) { // GPS+DS18+status, отправка
+typedef struct __attribute__((packed)) { // DS18B20, отправка каждые ~750 мс
+	uint8_t flag;
+	uint16_t num;
+	uint32_t time_from_start;
+
+	float ds18b20_temperature;
+} rf_ds_package_t;
+
+typedef struct __attribute__((packed)) {
+	rf_ds_package_t pack;
+	uint16_t crc;
+} rf_ds_package_crc_t;
+
+
+
+typedef struct __attribute__((packed)) { // GPS+status, отправка каждую секунду
 	uint8_t flag;
 	uint16_t num;
 	uint32_t time_from_start;

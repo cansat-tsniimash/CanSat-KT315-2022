@@ -14,6 +14,8 @@ unsigned short Crc16(unsigned char *buf, unsigned short len) {
 	return crc;
 }
 
+
+
 /*void send_rf_package (nrf24_lower_api_config_t *nrf24_lowlevel_config) {
 	nrf24_fifo_status(nrf24_lowlevel_config, rf_fifo_status_rx, rf_fifo_status_tx);
 	if (rf_fifo_status_tx != NRF24_FIFO_FULL) {

@@ -2,12 +2,50 @@
 #include "../includes.h"
 
 extern SPI_HandleTypeDef hspi2;
-extern struct bme280_dev bmp280;
-extern stmdev_ctx_t lis_ctx;
-extern stmdev_ctx_t lsm_ctx;
-extern ds18b20_t ds18b20;
 
-void app_init() {
+void app_init(init_t *this) {
+
+
+	//imu shift register descriptor
+	shift_reg_t shift_reg_imu = {
+		.bus = &hspi2,
+		.latch_port = GPIOC,
+		.latch_pin = GPIO_PIN_1,
+		.oe_port = GPIOC,
+		.oe_pin = GPIO_PIN_13,
+		.value = 0
+	};
+
+	//rf shift register descriptor
+	shift_reg_t shift_reg_rf = {
+		.bus = &hspi2,
+		.latch_port = GPIOC,
+		.latch_pin = GPIO_PIN_4,
+		.oe_port = GPIOC,
+		.oe_pin = GPIO_PIN_5,
+		.value = 0
+	};
+
+	//imu bmp descriptor
+	bme_spi_intf_sr bmp_setup = {
+		.sr_pin = 2,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
+
+	//imu lis descriptor
+	lis_spi_intf_sr lis_setup = {
+		.sr_pin = 3,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
+
+	//imu lsm descriptor
+	lsm_spi_intf_sr lsm_setup = {
+		.sr_pin = 4,
+		.spi = &hspi2,
+		.sr = &shift_reg_imu
+	};
 
 	//rf nrf24 descriptors
 	nrf24_rf_config_t nrf24_rf_setup = {
@@ -39,8 +77,26 @@ void app_init() {
 	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
 
 
-	//Init DS18B20
+	//Init shift_reg_imu
+	shift_reg_init(&shift_reg_imu);
+	shift_reg_oe(&shift_reg_imu, true);
+	shift_reg_write_8(&shift_reg_imu, 0xFF);
+	shift_reg_oe(&shift_reg_imu, false);
 
+	//Init shift_reg_rf
+	shift_reg_init(&shift_reg_rf);
+	shift_reg_oe(&shift_reg_rf, true);
+	shift_reg_write_8(&shift_reg_rf, 0xFF);
+	shift_reg_oe(&shift_reg_rf, false);
+
+	//Init imu
+	bme_init_default_sr(&bmp280, &bmp_setup);
+	lisset_sr(&lis_ctx, &lis_setup);
+	lsmset_sr(&lsm_ctx, &lsm_setup);
+
+	//Init DS18B20
+	onewire_init(&ds18b20);
+	ds18b20_set_config(&ds18b20, -100, 100, DS18B20_RESOLUTION_12_BIT);
 
 	//Init GNSS
 	//static uint8_t gps_cycle_buffer[500];

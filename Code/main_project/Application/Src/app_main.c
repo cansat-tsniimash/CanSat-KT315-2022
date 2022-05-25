@@ -1,22 +1,12 @@
-#include "../app_main.h"
-#include "../includes.h"
-#include "../initializations.h"
-#include "../sensors.h"
+#include "app_main.h"
+#include "includes.h"
 
+#include "shift_regs.h"
+#include "bmp280.h"
+#include "lis3mdl.h"
+#include "lsm6ds3.h"
 
-
-#include <stdint.h>
-#include <stdbool.h>
-#include <stm32f4xx_hal.h>
-
-#include "BME280/DriverForBME280.h"
-#include "LSM6DS3/DLSM.h"
-#include "ATGM336H/nmea_gps.h"
-
-
-/* Begin data structures */
-
-
+extern SPI_HandleTypeDef hspi2;
 
 /*struct minmea_sentence_gga {
     struct minmea_time time;
@@ -37,28 +27,33 @@
 //}
 
 
-
-
-/* Begin service structures */
-
-
-//imu bmp service structure
-struct bme280_dev bmp280 = {0};
-
-//imu lis service structure
-stmdev_ctx_t lis_ctx = {0};
-
-//imu lsm service structure
-stmdev_ctx_t lsm_ctx = {0};
-
-
-/* End service structures */
-
-
 void app_main (void) {
 
-	//Init
-	//app_init();
+
+	/* Begin Init */
+
+	//SHIF_REG
+	shift_reg_t shift_reg_imu = shift_reg_create_descriptor(shift_reg_imu_conf);
+	shift_reg_init_stm32(&shift_reg_imu);
+
+	shift_reg_t shift_reg_rf = shift_reg_create_descriptor(shift_reg_rf_conf);
+	shift_reg_init_stm32(&shift_reg_rf);
+
+	//BMP280
+	bme_spi_intf_sr bmp_setup = bmp280_create_descriptor(bmp280_conf);
+	struct bme280_dev bmp280 = bmp280_init(&bmp_setup);
+
+	//LIS3MDL
+	lis_spi_intf_sr lis_setup = lis_create_descriptor(lis_conf);
+	stmdev_ctx_t lis = lis_init(&lis_setup);
+
+	//LSM6DS3
+	lsm_spi_intf_sr lsm_setup = lsm_create_descriptor(lsm_conf);
+	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
+
+	/* End Init */
+
+
 
 
 
@@ -73,8 +68,13 @@ void app_main (void) {
 
 	/* Begin data structures */
 
-	//struct bme280_data bmp_data = {0};
-	//lsm_data_t lsm_data = {0};
+	bmp_data_t bmp_data = {0};
+
+	lis_data_t lis_data = {0};
+
+	lsm_data_t lsm_data = {0};
+
+	uint16_t ds_temperature = 0;
 
 	/* End data structures */
 
@@ -83,14 +83,8 @@ void app_main (void) {
 	while(true) {
 
 		// Work~~ OwO
-		//app_work();
 
-		/* Begin GetData */
-
-			//bmp_data = bme_read_data(&bme280);
-			//lsmread(&lsm_ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
-
-		/* End GetData */
+		printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
 
 
 		/* Begin working with GNSS */
@@ -111,10 +105,6 @@ void app_main (void) {
 		//gps_get_gga(cookie, gga_);
 
 		/* End working with GNSS */
-
-
-
-
 
 	}
 }

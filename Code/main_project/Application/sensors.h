@@ -24,6 +24,6 @@ typedef struct {
 
 } gps_data_t;
 
-void app_work();
+sensors_t app_work();
 
 #endif /* SENSORS_H_ */

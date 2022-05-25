@@ -236,11 +236,6 @@ void app_main() {
 
 		/* Begin radio data transmit */
 
-		int volatile a = 0;
-		nrf24_irq_get(&nrf24_lowlevel_config, &a);
-		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-		nrf24_irq_get(&nrf24_lowlevel_config, &a);
-
 		nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
 		printf("%d\n%d\n\n", package_num, rf_fifo_status_tx);
 		if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
@@ -255,9 +250,7 @@ void app_main() {
 			HAL_Delay(100);
 		}
 
-		nrf24_irq_get(&nrf24_lowlevel_config, &a);
 		nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-		nrf24_irq_get(&nrf24_lowlevel_config, &a);
 
 		/* End radio data transmit */
 

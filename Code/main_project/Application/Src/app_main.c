@@ -1,32 +1,12 @@
-#include "../app_main.h"
+#include "app_main.h"
+#include "includes.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <stm32f4xx_hal.h>
-
-#include "BME280/DriverForBME280.h"
-#include "LSM6DS3/DLSM.h"
-#include "ATGM336H/nmea_gps.h"
-#include "nRF24L01_PL/nrf24_upper_api.h"
-#include "nRF24L01_PL/nrf24_lower_api.h"
-#include "nRF24L01_PL/nrf24_lower_api_stm32.h"
-#include "nRF24L01_PL/nrf24_defs.h"
+#include "shift_regs.h"
+#include "bmp280.h"
+#include "lis3mdl.h"
+#include "lsm6ds3.h"
 
 extern SPI_HandleTypeDef hspi2;
-
-/* Begin data structures */
-
-typedef struct {
-		float temperature;
-		float acc[3];
-		float gyro[3];
-} lsm_data_t;
-
-typedef struct {
-	float gps_lat;
-	float gps_lon;
-	float gps_alt;
-} gps_data_t;
 
 /*struct minmea_sentence_gga {
     struct minmea_time time;
@@ -39,72 +19,12 @@ typedef struct {
     struct minmea_float height; char height_units;
     int dgps_age;
 };*/
-
 /* End data structures */
 
 
-/* Begin rf package structure */
-
-typedef struct __attribute__((packed)) {
-	uint8_t flag;
-	uint8_t BMP_temperature;
-
-	uint16_t LSM_acc_x;
-	uint16_t LSM_acc_y;
-	uint16_t LSM_acc_z;
-	uint16_t LSM_gyro_x;
-	uint16_t LSM_gyro_y;
-	uint16_t LSM_gyro_z;
-
-	uint16_t num;
-
-	uint32_t time_from_start;
-	//uint32_t time_real;
-	uint32_t BMP_pressure;
-} rf_package_t;
-
-typedef struct __attribute__((packed)) {
-	rf_package_t pack;
-	uint16_t crc;
-} rf_package_crc_t;
-
-/* End rf package structure  */
-
-//Func for counting CrcSum for package
-unsigned short Crc16(unsigned char *buf, unsigned short len) //crc func
-{
-	unsigned short crc = 0xFFFF;
-	unsigned char i;
-	while (len--) {
-		crc ^= *buf++ << 8;
-		for (i = 0; i < 8; i++)
-			crc = crc & 0x8000 ? (crc << 1) ^ 0x1021 : crc << 1;
-	}
-	return crc;
-}
-
-//Func for packing data that will be sent by radio
-rf_package_crc_t pack(struct bme280_data *bmp_data, lsm_data_t *lsm_data, uint16_t package_num) {
-	rf_package_t rf_package = {
-		.flag = 0x93,
-		.BMP_temperature = (uint8_t)(bmp_data->temperature * 10),
-		.LSM_acc_x = (int16_t)(lsm_data->acc[0] * 1000),
-		.LSM_acc_y = (int16_t)(lsm_data->acc[1] * 1000),
-		.LSM_acc_z = (int16_t)(lsm_data->acc[2] * 1000),
-		.LSM_gyro_x = (int16_t)(lsm_data->gyro[0] * 1000),
-		.LSM_gyro_y = (int16_t)(lsm_data->gyro[1] * 1000),
-		.LSM_gyro_z = (int16_t)(lsm_data->gyro[2] * 1000),
-		.num = package_num,
-		.time_from_start = HAL_GetTick(),
-		//.time_real = ,
-		.BMP_pressure = (uint32_t)bmp_data->pressure
-	};
-	rf_package_crc_t rf_package_crc = {
-		.pack = rf_package,
-		.crc = Crc16((unsigned char*)&rf_package, sizeof(rf_package))
-	};
-	return rf_package_crc;
-}
+//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+//
+//}
 
 
 void app_main (void) {
@@ -112,189 +32,79 @@ void app_main (void) {
 
 	/* Begin Init */
 
-	//imu bme service structure
-	struct bme280_dev bme280 = {0};
+	//SHIF_REG
+	shift_reg_t shift_reg_imu = shift_reg_create_descriptor(shift_reg_imu_conf);
+	shift_reg_init_stm32(&shift_reg_imu);
 
-	//imu lsm service structure
-	stmdev_ctx_t ctx = {0};
+	shift_reg_t shift_reg_rf = shift_reg_create_descriptor(shift_reg_rf_conf);
+	shift_reg_init_stm32(&shift_reg_rf);
 
-	//imu shift register descriptor
-	shift_reg_t shift_reg_imu = {
-		.bus = &hspi2,
-		.latch_port = GPIOC,
-		.latch_pin = GPIO_PIN_1,
-		.oe_port = GPIOC,
-		.oe_pin = GPIO_PIN_13,
-		.value = 0
-	};
+	//BMP280
+	bme_spi_intf_sr bmp_setup = bmp280_create_descriptor(bmp280_conf);
+	struct bme280_dev bmp280 = bmp280_init(&bmp_setup);
 
-	//rf shift register descriptor
-	shift_reg_t shift_reg_rf = {
-		.bus = &hspi2,
-		.latch_port = GPIOC,
-		.latch_pin = GPIO_PIN_4,
-		.oe_port = GPIOC,
-		.oe_pin = GPIO_PIN_5,
-		.value = 0
-	};
+	//LIS3MDL
+	lis_spi_intf_sr lis_setup = lis_create_descriptor(lis_conf);
+	stmdev_ctx_t lis = lis_init(&lis_setup);
 
-	//imu bme descriptor
-	bme_spi_intf_sr bme_setup = {
-		.sr_pin = 2,
-		.spi = &hspi2,
-		.sr = &shift_reg_imu
-	};
-
-	//imu lsm descriptor
-	lsm_spi_intf_sr lsm_setup = {
-		.sr_pin = 4,
-		.spi = &hspi2,
-		.sr = &shift_reg_imu
-	};
-
-	//rf nrf24 descriptors
-	nrf24_rf_config_t nrf24_rf_setup = {
-		.data_rate = NRF24_DATARATE_250_KBIT,
-		.tx_power = NRF24_TXPOWER_MINUS_18_DBM,
-		.rf_channel = 116
-	};
-	nrf24_protocol_config_t nrf24_protocol_setup = {
-		.crc_size = NRF24_CRCSIZE_DISABLE,
-		.address_width = NRF24_ADDRES_WIDTH_5_BYTES,
-		.en_dyn_payload_size = false,
-		.en_ack_payload = false,
-		.en_dyn_ack = false,
-		.auto_retransmit_count = 0,
-		.auto_retransmit_delay = 0
-	};
-	nrf24_pipe_config_t nrf24_pipe_setup = {
-		.enable_auto_ack = false,
-		.address = 0xacacacacac,
-		.payload_size = -1
-	};
-	nrf24_spi_pins_sr_t nrf24_shift_reg_setup = {
-		.this = &shift_reg_rf,
-		.pos_CE = 0,
-		.pos_CS = 1
-	};
-	nrf24_fifo_status_t rf_fifo_status_rx;
-	nrf24_fifo_status_t rf_fifo_status_tx;
-	nrf24_lower_api_config_t nrf24_lowlevel_config = {0};
-
-	//Init shift_reg_imu
-	shift_reg_init(&shift_reg_imu);
-	shift_reg_oe(&shift_reg_imu, true);
-	shift_reg_write_8(&shift_reg_imu, 0xFF);
-	shift_reg_oe(&shift_reg_imu, false);
-
-	//Init shift_reg_rf
-	shift_reg_init(&shift_reg_rf);
-	shift_reg_oe(&shift_reg_rf, true);
-	shift_reg_write_8(&shift_reg_rf, 0xFF);
-	shift_reg_oe(&shift_reg_rf, false);
-
-	//Init imu
-	bme_init_default_sr(&bme280, &bme_setup);
-	lsmset_sr(&ctx, &lsm_setup);
-
-	//Init GNSS
-	static uint8_t gps_cycle_buffer[500];
-	LL_DMA_ConfigAddresses(DMA2, DMA2_Stream1, USART6->DR, gps_cycle_buffer, DMA_PERIPH_TO_MEMORY);
-	LL_DMA_SetDataLength(DMA2, DMA2_Stream1, sizeof(gps_cycle_buffer)*sizeof(gps_cycle_buffer[0]));
-	LL_DMA_EnableStream(DMA2, DMA2_Stream1);
-	LL_USART_EnableDMAReq_RX(USART6);
-	gps_init();
-
-	//Init rf
-	nrf24_spi_init_sr(&nrf24_lowlevel_config, &hspi2, &nrf24_shift_reg_setup);
-	nrf24_mode_standby(&nrf24_lowlevel_config);
-	nrf24_setup_rf(&nrf24_lowlevel_config, &nrf24_rf_setup);
-	nrf24_setup_protocol(&nrf24_lowlevel_config, &nrf24_protocol_setup);
-	nrf24_pipe_set_tx_addr(&nrf24_lowlevel_config, 0xacacacacac);
-	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 0, &nrf24_pipe_setup);
-	nrf24_pipe_rx_start(&nrf24_lowlevel_config, 1, &nrf24_pipe_setup);
-	nrf24_mode_standby(&nrf24_lowlevel_config);
-	nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
-
+	//LSM6DS3
+	lsm_spi_intf_sr lsm_setup = lsm_create_descriptor(lsm_conf);
+	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
 	/* End Init */
 
 
+
+
+
+
 	/* Begin rf package structs*/
 
-	rf_package_crc_t rf_package_crc = {0};
-	uint16_t package_num = 0;
+	//rf_package_crc_t rf_package_crc = {0};
+	//uint16_t package_num = 0;
 
 	/* End rf package structs*/
 
 
 	/* Begin data structures */
 
-	struct bme280_data bmp_data = {0};
+	bmp_data_t bmp_data = {0};
+
+	lis_data_t lis_data = {0};
+
 	lsm_data_t lsm_data = {0};
+
+	uint16_t ds_temperature = 0;
 
 	/* End data structures */
 
 
-	// loop
+	// Eternal loop
 	while(true) {
 
+		// Work~~ OwO
 
-		/* Begin GetData */
-
-			bmp_data = bme_read_data(&bme280);
-			lsmread(&ctx, &lsm_data.temperature, &lsm_data.acc, &lsm_data.gyro);
-
-		/* End GetData */
+		printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
 
 
 		/* Begin working with GNSS */
 
 		//Working with Raw Data buffer
-		size_t tail = 0;
-		size_t head = sizeof(gps_cycle_buffer) - LL_DMA_GetDataLength(DMA2, DMA2_Stream1);
-		while (tail != head) {
-			gps_push_byte(gps_cycle_buffer[tail]);
-			tail++;
-			if (tail >= sizeof(gps_cycle_buffer)) {
-				tail = 0;
-			}
-		}
+		//size_t tail = 0;
+		//size_t head = sizeof(gps_cycle_buffer) - LL_DMA_GetDataLength(DMA2, DMA2_Stream1);
+		//while (tail != head) {
+		//	gps_push_byte(gps_cycle_buffer[tail]);
+		//	tail++;
+		//	if (tail >= sizeof(gps_cycle_buffer)) {
+		//		tail = 0;
+		//	}
+		//}
 		//Parsing Raw Data
-		gps_work();
+		//gps_work();
 		//
 		//gps_get_gga(cookie, gga_);
 
 		/* End working with GNSS */
-
-
-		/* Begin radio data transmit */
-
-			int a = 0;
-			nrf24_irq_get(&nrf24_lowlevel_config, &a);
-			nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-			nrf24_irq_get(&nrf24_lowlevel_config, &a);
-
-			nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
-			printf("%d\n%d\n\n", package_num, rf_fifo_status_tx);
-			if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
-				rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
-				package_num++;
-				nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
-				nrf24_mode_tx(&nrf24_lowlevel_config);
-				HAL_Delay(3);
-				nrf24_mode_standby(&nrf24_lowlevel_config);
-			} else {
-				nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
-				HAL_Delay(100);
-			}
-
-			nrf24_irq_get(&nrf24_lowlevel_config, &a);
-			nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-			nrf24_irq_get(&nrf24_lowlevel_config, &a);
-
-		/* End radio data transmit */
-
 
 	}
 }

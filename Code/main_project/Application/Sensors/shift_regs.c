@@ -1,5 +1,5 @@
-#include "shift_regs.h"
-#include "includes.h"
+#include <shift_regs.h>
+#include <includes.h>
 
 shift_reg_t shift_reg_create_descriptor(SPI_HandleTypeDef *bus, GPIO_TypeDef *latch_port, uint16_t latch_pin, GPIO_TypeDef *oe_port, uint16_t oe_pin, uint16_t value) {
 	shift_reg_t shift_reg_ = {

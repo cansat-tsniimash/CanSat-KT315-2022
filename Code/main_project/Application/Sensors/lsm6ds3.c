@@ -1,5 +1,5 @@
-#include "../lsm6ds3.h"
-#include "../includes.h"
+#include <lsm6ds3.h>
+#include <includes.h>
 
 lsm_spi_intf_sr lsm_create_descriptor(int shift_reg_pin, SPI_HandleTypeDef *bus, shift_reg_t *shift_reg) {
 	lsm_spi_intf_sr lsm_ = {

@@ -1,5 +1,5 @@
-#include "bmp280.h"
-#include "includes.h"
+#include <bmp280.h>
+#include <includes.h>
 
 bme_spi_intf_sr bmp280_create_descriptor(int shift_reg_pin, SPI_HandleTypeDef *bus, shift_reg_t *shift_reg) {
 	bme_spi_intf_sr bmp_ = {

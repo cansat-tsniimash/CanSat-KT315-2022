@@ -1,5 +1,5 @@
-#include "ds18b20.h"
-#include "includes.h"
+#include <ds18b20.h>
+#include <includes.h>
 
 ds18b20_t ds18_create_descriptor(GPIO_TypeDef *onewire_port, uint16_t onewire_pin) {
 	ds18b20_t ds18_ = {

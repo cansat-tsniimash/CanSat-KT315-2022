@@ -1,7 +1,7 @@
 #ifndef LSM6DS3_H_
 #define LSM6DS3_H_
 
-#include "includes.h"
+#include <includes.h>
 
 typedef struct {
 	float temperature;

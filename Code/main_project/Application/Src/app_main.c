@@ -1,12 +1,17 @@
-#include "app_main.h"
-#include "includes.h"
+#include <app_main.h>
+#include <includes.h>
 
-#include "shift_regs.h"
-#include "bmp280.h"
-#include "lis3mdl.h"
-#include "lsm6ds3.h"
+#include <shift_regs.h>
+#include <bmp280.h>
+#include <lis3mdl.h>
+#include <lsm6ds3.h>
+#include <ds18b20.h>
+#include <photores.h>
+#include <gps.h>
+#include <radio.h>
 
 extern SPI_HandleTypeDef hspi2;
+extern ADC_HandleTypeDef hadc1;
 
 /*struct minmea_sentence_gga {
     struct minmea_time time;
@@ -22,34 +27,44 @@ extern SPI_HandleTypeDef hspi2;
 /* End data structures */
 
 
-//void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-//
-//}
-
-
 void app_main (void) {
 
 
 	/* Begin Init */
 
 	//SHIF_REG
-	shift_reg_t shift_reg_imu = shift_reg_create_descriptor(shift_reg_imu_conf);
+	shift_reg_t shift_reg_imu = shift_reg_create_descriptor(&hspi2, GPIOC, GPIO_PIN_1, GPIOC, GPIO_PIN_13, 0);
 	shift_reg_init_stm32(&shift_reg_imu);
 
-	shift_reg_t shift_reg_rf = shift_reg_create_descriptor(shift_reg_rf_conf);
+	shift_reg_t shift_reg_rf = shift_reg_create_descriptor(&hspi2, GPIOC, GPIO_PIN_4, GPIOC, GPIO_PIN_5, 0);
 	shift_reg_init_stm32(&shift_reg_rf);
 
 	//BMP280
-	bme_spi_intf_sr bmp_setup = bmp280_create_descriptor(bmp280_conf);
+	bme_spi_intf_sr bmp_setup = bmp280_create_descriptor(2, &hspi2, &shift_reg_imu);
 	struct bme280_dev bmp280 = bmp280_init(&bmp_setup);
 
 	//LIS3MDL
-	lis_spi_intf_sr lis_setup = lis_create_descriptor(lis_conf);
+	lis_spi_intf_sr lis_setup = lis_create_descriptor(3, &hspi2, &shift_reg_imu);
 	stmdev_ctx_t lis = lis_init(&lis_setup);
 
 	//LSM6DS3
-	lsm_spi_intf_sr lsm_setup = lsm_create_descriptor(lsm_conf);
+	lsm_spi_intf_sr lsm_setup = lsm_create_descriptor(4, &hspi2, &shift_reg_imu);
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
+
+	//Photoresistors
+	photorezistor_t photores_rckt = photores_create_descriptor(0, &hadc1);
+	photorezistor_t photores_seed = photores_create_descriptor(0, &hadc1);
+
+	//NRF24
+	nrf24_lower_api_config_t nrf24_config = {0};
+	nrf24_fifo_status_t rf_fifo_status_rx;
+	nrf24_fifo_status_t rf_fifo_status_tx;
+
+	nrf24_spi_pins_sr_t nrf24_sr_setup = nrf24_create_sr_descriptor(&shift_reg_rf, 0, 1);
+	nrf24_rf_config_t nrf24_rf_setup = nrf24_create_rf_descriptor(NRF24_DATARATE_250_KBIT,NRF24_TXPOWER_MINUS_18_DBM, 116);
+	nrf24_protocol_config_t nrf24_protocol_setup = nrf24_create_protocol_descriptor(NRF24_CRCSIZE_DISABLE, NRF24_ADDRES_WIDTH_5_BYTES, true, true, true, 0, 0);
+	nrf24_pipe_config_t nrf24_pipe_setup = nrf24_create_pipe_descriptor(false, 0xacacacacac, -1);
+	nrf24_init_stm32(&nrf24_config, &hspi2, &nrf24_sr_setup, &nrf24_rf_setup, &nrf24_protocol_setup, &nrf24_pipe_setup);
 
 	/* End Init */
 
@@ -76,6 +91,9 @@ void app_main (void) {
 
 	uint16_t ds_temperature = 0;
 
+	float photores_rckt_lux = 0.0;
+	float photores_seed_lux = 0.0;
+
 	/* End data structures */
 
 
@@ -84,7 +102,7 @@ void app_main (void) {
 
 		// Work~~ OwO
 
-		printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
+		//printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
 
 
 		/* Begin working with GNSS */

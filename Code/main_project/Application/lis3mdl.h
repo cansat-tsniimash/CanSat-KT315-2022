@@ -1,7 +1,7 @@
 #ifndef LIS3MDL_H_
 #define LIS3MDL_H_
 
-#include "includes.h"
+#include <includes.h>
 
 typedef struct {
 	float temperature;

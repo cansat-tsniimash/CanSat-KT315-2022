@@ -1,5 +1,5 @@
-#include "lis3mdl.h"
-#include "includes.h"
+#include <lis3mdl.h>
+#include <includes.h>
 
 lis_spi_intf_sr lis_create_descriptor(int shift_reg_pin, SPI_HandleTypeDef *bus, shift_reg_t *shift_reg) {
 	lis_spi_intf_sr lis_ = {

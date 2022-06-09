@@ -7,7 +7,7 @@ typedef enum {
 	RF_FLAG_DOSIMETER,
 	RF_FLAG_BMP,
 	RF_FLAG_DS,
-	RF_GLAG_GPS,
+	RF_FLAG_GPS,
 	RF_FLAG_INERTIAL,
 	RF_FLAG_SEBASTIAN
 } rf_flag_t;
@@ -35,8 +35,8 @@ typedef struct __attribute__((packed)) { // BMP-пакет, отправка к�
 	uint16_t num;
 	uint32_t time_from_start;
 
-	int16_t BMP_temperature;
-	uint32_t BMP_pressure;
+	int16_t bmp_temperature;
+	uint32_t bmp_pressure;
 } rf_bmp_package_t;
 
 typedef struct __attribute__((packed)) {
@@ -88,15 +88,9 @@ typedef struct __attribute__((packed)) { // Инерциалка+фоторез,
 	uint16_t num;
 	uint32_t time_from_start;
 
-	int16_t LSM_acc_x;
-	int16_t LSM_acc_y;
-	int16_t LSM_acc_z;
-	int16_t LSM_gyro_x;
-	int16_t LSM_gyro_y;
-	int16_t LSM_gyro_z;
-	int16_t LIS_mag_x;
-	int16_t LIS_mag_y;
-	int16_t LIS_mag_z;
+	int16_t lsm_acc [3];
+	int16_t lsm_gyro [3];
+	int16_t lis_mag [3];
 	float lux;
 } rf_inertial_package_t;
 
@@ -108,6 +102,10 @@ typedef struct __attribute__((packed)) {
 
 
 typedef struct  __attribute__((packed)) { // Маджвик, отправка каждые ??
+	uint8_t flag;
+	uint16_t num;
+	uint32_t time_from_start;
+
 	float quaternion [4];
 } rf_sebastian_package_t;
 
@@ -128,11 +126,11 @@ void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef
 
 //Funcs for packing data for radio
 rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_last_sec, uint32_t ticks_sum);
-void pack_rf_bmp();
-void pack_rf_ds();
-void pack_rf_gps();
-void pack_rf_inertial();
-void pack_rf_sebastian();
+rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure);
+rf_ds_package_crc_t pack_rf_ds(float temperature);
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t time_sec, uint32_t time_microsec, uint8_t fix, uint8_t status);
+rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3], float lux);
+rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]);
 
 //Funcs for sending data by radio
 void send_rf_package(void *pack, uint8_t pack_size);

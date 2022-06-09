@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 #include <stm32f4xx_hal.h>
 #include <fatfs.h>
 

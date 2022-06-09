@@ -87,26 +87,102 @@ rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_last_sec, uint32_t t
 		.pack = rf_package_,
 		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
 	};
+	package_num_dosimeter++;
+	return rf_package_crc_;
 }
 
-void pack_rf_bmp() {
-
+rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure) {
+	rf_bmp_package_t rf_package_ = {
+		.flag = RF_FLAG_BMP,
+		.num = package_num_bmp,
+		.time_from_start = HAL_GetTick(),
+		.bmp_temperature = temperature,
+		.bmp_pressure = pressure
+	};
+	rf_bmp_package_crc_t rf_package_crc_ = {
+		.pack = rf_package_,
+		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+	};
+	package_num_bmp++;
+	return rf_package_crc_;
 }
 
-void pack_rf_ds() {
-
+rf_ds_package_crc_t pack_rf_ds(float temperature) {
+	rf_ds_package_t rf_package_ = {
+		.flag = RF_FLAG_DS,
+		.num = package_num_ds,
+		.time_from_start = HAL_GetTick(),
+		.ds18b20_temperature = temperature
+	};
+	rf_ds_package_crc_t rf_package_crc_ = {
+		.pack = rf_package_,
+		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+	};
+	package_num_ds++;
+	return rf_package_crc_;
 }
 
-void pack_rf_gps() {
-
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t time_sec, uint32_t time_microsec, uint8_t fix, uint8_t status) {
+	rf_gps_package_t rf_package_ = {
+		.flag = RF_FLAG_GPS,
+		.num = package_num_gps,
+		.time_from_start = HAL_GetTick(),
+		.longtitude = lon,
+		.latitude = lat,
+		.altitude = alt,
+		.time_s = time_sec,
+		.time_us = time_microsec,
+		.fix = fix,
+		.status = status
+	};
+	rf_gps_package_crc_t rf_package_crc_ = {
+		.pack = rf_package_,
+		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+	};
+	package_num_gps++;
+	return rf_package_crc_;
 }
 
-void pack_rf_inertial() {
-
+rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3], float lux) {
+	rf_inertial_package_t rf_package_ = {
+		.flag = RF_FLAG_INERTIAL,
+		.num = package_num_inertial,
+		.time_from_start = HAL_GetTick(),
+		.lsm_acc[0] = acc[0],
+		.lsm_acc[1] = acc[1],
+		.lsm_acc[2] = acc[2],
+		.lsm_gyro[0] = gyro[0],
+		.lsm_gyro[1] = gyro[1],
+		.lsm_gyro[2] = gyro[2],
+		.lis_mag[0] = mag[0],
+		.lis_mag[1] = mag[1],
+		.lis_mag[2] = mag[2],
+		.lux = lux
+	};
+	rf_inertial_package_crc_t rf_package_crc_ = {
+		.pack = rf_package_,
+		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+	};
+	package_num_inertial++;
+	return rf_package_crc_;
 }
 
-void pack_rf_sebastian() {
-
+rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]) {
+	rf_sebastian_package_t rf_package_ = {
+		.flag = RF_FLAG_SEBASTIAN,
+		.num = package_num_sebastian,
+		.time_from_start = HAL_GetTick(),
+		.quaternion[0] = quaternion[0],
+		.quaternion[1] = quaternion[1],
+		.quaternion[2] = quaternion[2],
+		.quaternion[3] = quaternion[3],
+	};
+	rf_sebastian_package_crc_t rf_package_crc_ = {
+		.pack = rf_package_,
+		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+	};
+	package_num_sebastian++;
+	return rf_package_crc_;
 }
 
 

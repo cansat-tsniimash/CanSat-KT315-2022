@@ -135,12 +135,7 @@ void pack_rf_inertial();
 void pack_rf_sebastian();
 
 //Funcs for sending data by radio
-void send_rf_dosimeter(rf_dosimeter_package_crc_t pack);
-void send_rf_bmp();
-void send_rf_ds();
-void send_rf_gps();
-void send_rf_inertial();
-void send_rf_sebastian();
+void send_rf_package(void *pack, uint8_t pack_size);
 
 
 #endif /* RADIO_H_ */

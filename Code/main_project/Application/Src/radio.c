@@ -187,40 +187,19 @@ rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]) {
 
 
 
-/*void send_rf_dosimeter(rf_dosimeter_package_crc_t pack, nrf24_lower_api_config_t* nrf24_lowlevel_config) {
-	nrf24_fifo_status(nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
-	if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
-		rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
-		package_num++;
-		nrf24_fifo_write(nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
-		nrf24_mode_tx(nrf24_lowlevel_config);
+void send_rf_package(nrf24_service_t *nrf24_service, void *package, size_t size) {
+
+	nrf24_fifo_status(&nrf24_service->nrf24_lower_api_config, &nrf24_service->rf_fifo_status_rx, &nrf24_service->rf_fifo_status_tx);
+	if (nrf24_service->rf_fifo_status_tx != NRF24_FIFO_FULL) {
+		nrf24_fifo_write(&nrf24_service->nrf24_lower_api_config, (uint8_t*) package, size, false);
+		nrf24_mode_tx(&nrf24_service->nrf24_lower_api_config);
 		HAL_Delay(3);
-		nrf24_mode_standby(nrf24_lowlevel_config);
+		nrf24_mode_standby(&nrf24_service->nrf24_lower_api_config);
 	} else {
-		nrf24_fifo_flush_tx(nrf24_lowlevel_config);
+		nrf24_fifo_flush_tx(&nrf24_service->nrf24_lower_api_config);
 		HAL_Delay(100);
 	}
-	nrf24_irq_clear(nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-}*/
-
-void send_rf_bmp() {
-
-}
-
-void send_rf_ds() {
-
-}
-
-void send_rf_gps() {
-
-}
-
-void send_rf_inertial() {
-
-}
-
-void send_rf_sebastian() {
-
+	nrf24_irq_clear(&nrf24_service->nrf24_lower_api_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 }
 
 

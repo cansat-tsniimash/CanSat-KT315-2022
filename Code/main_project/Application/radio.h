@@ -12,6 +12,12 @@ typedef enum {
 	RF_FLAG_SEBASTIAN
 } rf_flag_t;
 
+typedef struct {
+	nrf24_lower_api_config_t nrf24_lower_api_config;
+	nrf24_fifo_status_t rf_fifo_status_rx;
+	nrf24_fifo_status_t rf_fifo_status_tx;
+} nrf24_service_t;
+
 /* Begin RF Structures */
 
 typedef struct __attribute__((packed)) { // Дозиметр, отправка каждую секунду
@@ -133,7 +139,7 @@ rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], in
 rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]);
 
 //Funcs for sending data by radio
-void send_rf_package(void *pack, uint8_t pack_size);
+void send_rf_package(nrf24_service_t *nrf24_service, void *package, size_t size);
 
 
 #endif /* RADIO_H_ */

@@ -52,8 +52,8 @@ void app_main (void) {
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
 	//Photoresistors
-	photorezistor_t photores_rckt = photores_create_descriptor(0, &hadc1);
-	photorezistor_t photores_seed = photores_create_descriptor(0, &hadc1);
+	photorezistor_t photores_rckt = photores_create_descriptor(2000, &hadc1);
+	photorezistor_t photores_seed = photores_create_descriptor(2000, &hadc1);
 
 	//NRF24
 	nrf24_lower_api_config_t nrf24_config = {0};
@@ -61,7 +61,7 @@ void app_main (void) {
 	nrf24_fifo_status_t rf_fifo_status_tx;
 
 	nrf24_spi_pins_sr_t nrf24_sr_setup = nrf24_create_sr_descriptor(&shift_reg_rf, 0, 1);
-	nrf24_rf_config_t nrf24_rf_setup = nrf24_create_rf_descriptor(NRF24_DATARATE_250_KBIT,NRF24_TXPOWER_MINUS_18_DBM, 116);
+	nrf24_rf_config_t nrf24_rf_setup = nrf24_create_rf_descriptor(NRF24_DATARATE_250_KBIT,NRF24_TXPOWER_MINUS_18_DBM, 115);
 	nrf24_protocol_config_t nrf24_protocol_setup = nrf24_create_protocol_descriptor(NRF24_CRCSIZE_DISABLE, NRF24_ADDRES_WIDTH_5_BYTES, true, true, true, 0, 0);
 	nrf24_pipe_config_t nrf24_pipe_setup = nrf24_create_pipe_descriptor(false, 0xacacacacac, -1);
 	nrf24_init_stm32(&nrf24_config, &hspi2, &nrf24_sr_setup, &nrf24_rf_setup, &nrf24_protocol_setup, &nrf24_pipe_setup);
@@ -104,7 +104,6 @@ void app_main (void) {
 
 		//printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
 
-
 		/* Begin working with GNSS */
 
 		//Working with Raw Data buffer
@@ -124,5 +123,6 @@ void app_main (void) {
 
 		/* End working with GNSS */
 
+		;
 	}
 }

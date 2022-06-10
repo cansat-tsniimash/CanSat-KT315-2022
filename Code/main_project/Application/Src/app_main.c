@@ -1,7 +1,9 @@
 #include <app_main.h>
 #include <includes.h>
+#include <timers.h>
 
 #include <shift_regs.h>
+
 #include <bmp280.h>
 #include <lis3mdl.h>
 #include <lsm6ds3.h>
@@ -69,21 +71,9 @@ void app_main (void) {
 	/* End Init */
 
 
-
-
-
-
-	/* Begin rf package structs*/
-
-	//rf_package_crc_t rf_package_crc = {0};
-	//uint16_t package_num = 0;
-
-	/* End rf package structs*/
-
-
 	/* Begin data structures */
 
-	bmp_data_t bmp_data = {0};
+
 
 	lis_data_t lis_data = {0};
 
@@ -102,7 +92,12 @@ void app_main (void) {
 
 		// Work~~ OwO
 
-		//printf("t_bme: %f, t_ds: %f, mag_x: %f, mag_y: %f, mag_z: %f\n\n", bmp_data.temperature, ds_temperature, lis_data.mag[0], lis_data.mag[1], lis_data.mag[2]);
+		//BMP280
+		bmp_data_t bmp_data = {0};
+		bmp_data = bmp280_get_data(&bmp280);
+
+
+
 
 		/* Begin working with GNSS */
 
@@ -123,6 +118,5 @@ void app_main (void) {
 
 		/* End working with GNSS */
 
-		;
 	}
 }

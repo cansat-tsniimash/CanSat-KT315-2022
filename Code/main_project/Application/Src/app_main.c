@@ -10,7 +10,9 @@
 #include <ds18b20.h>
 #include <photores.h>
 #include <gps.h>
+
 #include <radio.h>
+#include <sd.h>
 
 extern SPI_HandleTypeDef hspi2;
 extern ADC_HandleTypeDef hadc1;
@@ -68,6 +70,16 @@ void app_main (void) {
 	nrf24_pipe_config_t nrf24_pipe_setup = nrf24_create_pipe_descriptor(false, 0xacacacacac, -1);
 	nrf24_init_stm32(&nrf24_config, &hspi2, &nrf24_sr_setup, &nrf24_rf_setup, &nrf24_protocol_setup, &nrf24_pipe_setup);
 
+	//SD-Card
+	FATFS fileSystem;
+	FIL dosimeter_file;
+	FRESULT res;
+	char sd_buffer[500] = {0};
+	UINT sd_bytes_written;
+	if (f_mount(&fileSystem, "/", 1) == FR_OK) {
+		const char dosimeter_file_path[] = "dosimeter.csv";
+		res = f_open(&dosimeter_file, &dosimeter_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+	}
 	/* End Init */
 
 
@@ -91,10 +103,16 @@ void app_main (void) {
 	while(true) {
 
 		// Work~~ OwO
+		res = -1;
+		sd_bytes_written = 0;
 
-		//BMP280
-		bmp_data_t bmp_data = {0};
-		bmp_data = bmp280_get_data(&bmp280);
+		//Dosimeter
+		uint32_t dosimeter_tps = Dosimeter_Get_TPS();
+		uint32_t dosimeter_sum = Dosimeter_Get_Sum();
+		rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_sum);
+		send_rf_package(&nrf24_config, &dosimeter_package, sizeof(dosimeter_package));
+		uint16_t sd_buffer_size = sd_parse_to_text_dosimeter(&sd_buffer, dosimeter_package);
+		res = f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 
 

@@ -54,8 +54,8 @@ void app_main (void) {
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
 	//Photoresistors
-	photorezistor_t photores_rckt = photores_create_descriptor(2000, &hadc1);
-	photorezistor_t photores_seed = photores_create_descriptor(2000, &hadc1);
+	photorezistor_t photores_rckt = photores_create_descriptor(5100, &hadc1);
+	photorezistor_t photores_seed = photores_create_descriptor(5100, &hadc1);
 
 	//NRF24
 	nrf24_lower_api_config_t nrf24_config = {0};

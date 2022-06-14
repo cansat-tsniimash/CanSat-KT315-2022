@@ -75,12 +75,12 @@ void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef
 
 
 
-rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_last_sec, uint32_t ticks_sum) {
+rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32_t ticks_sum) {
 	rf_dosimeter_package_t rf_package_ = {
 		.flag = RF_FLAG_DOSIMETER,
 		.num = package_num_dosimeter,
 		.time_from_start = HAL_GetTick(),
-		.ticks_now = ticks_last_sec,
+		.ticks_per_last_second = ticks_per_last_sec,
 		.ticks_sum = ticks_sum
 	};
 	rf_dosimeter_package_crc_t rf_package_crc_ = {
@@ -107,12 +107,13 @@ rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure) {
 	return rf_package_crc_;
 }
 
-rf_ds_package_crc_t pack_rf_ds(float temperature) {
+rf_ds_package_crc_t pack_rf_ds(float temperature, uint8_t status) {
 	rf_ds_package_t rf_package_ = {
 		.flag = RF_FLAG_DS,
 		.num = package_num_ds,
 		.time_from_start = HAL_GetTick(),
-		.ds18b20_temperature = temperature
+		.ds18b20_temperature = temperature,
+		.status = status
 	};
 	rf_ds_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
@@ -122,7 +123,7 @@ rf_ds_package_crc_t pack_rf_ds(float temperature) {
 	return rf_package_crc_;
 }
 
-rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t time_sec, uint32_t time_microsec, uint8_t fix, uint8_t status) {
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t time_sec, uint32_t time_microsec, uint8_t fix) {
 	rf_gps_package_t rf_package_ = {
 		.flag = RF_FLAG_GPS,
 		.num = package_num_gps,
@@ -130,10 +131,9 @@ rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t tim
 		.longtitude = lon,
 		.latitude = lat,
 		.altitude = alt,
-		.time_s = time_sec,
-		.time_us = time_microsec,
+		.time_sec = time_sec,
+		.time_microsec = time_microsec,
 		.fix = fix,
-		.status = status
 	};
 	rf_gps_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
@@ -201,22 +201,3 @@ void send_rf_package(nrf24_service_t *nrf24_service, void *package, size_t size)
 	}
 	nrf24_irq_clear(&nrf24_service->nrf24_lower_api_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 }
-
-
-/* Begin radio data transmit
-
-	nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
-	if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
-		rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
-		package_num++;
-		nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
-		nrf24_mode_tx(&nrf24_lowlevel_config);
-		HAL_Delay(3);
-		nrf24_mode_standby(&nrf24_lowlevel_config);
-	} else {
-		nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
-		HAL_Delay(100);
-	}
-	nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-
-End radio data transmit */

@@ -71,6 +71,7 @@ void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef
 	nrf24_pipe_rx_start(nrf24_config_, 1, nrf24_pipe_setup_);
 	nrf24_mode_standby(nrf24_config_);
 	nrf24_fifo_flush_tx(nrf24_config_);
+	return;
 }
 
 

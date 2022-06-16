@@ -56,8 +56,9 @@ void app_main (void) {
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
 	//Photoresistors
-	photorezistor_t photores_rckt = photores_create_descriptor(2000, &hadc1);
-	photorezistor_t photores_seed = photores_create_descriptor(2000, &hadc1);
+	adc1_init();
+	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 5);
+	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 5);
 
 	//NRF24
 	nrf24_lower_api_config_t nrf24_config = {0};
@@ -71,14 +72,15 @@ void app_main (void) {
 	nrf24_init_stm32(&nrf24_config, &hspi2, &nrf24_sr_setup, &nrf24_rf_setup, &nrf24_protocol_setup, &nrf24_pipe_setup);
 
 	//SD-Card
-	FATFS fileSystem;
+	FATFS file_system;
 	FIL dosimeter_file;
-	FRESULT res;
+	FRESULT fres;
 	char sd_buffer[500] = {0};
 	UINT sd_bytes_written;
-	if (f_mount(&fileSystem, "/", 1) == FR_OK) {
+	if (f_mount(&file_system, "", 1) == FR_OK) {
 		const char dosimeter_file_path[] = "dosimeter.csv";
-		res = f_open(&dosimeter_file, &dosimeter_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		fres = f_open(&dosimeter_file, &dosimeter_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&dosimeter_file, "flag;num;time from start;tps;ticks sum;crc\n");
 	}
 	/* End Init */
 
@@ -102,8 +104,8 @@ void app_main (void) {
 	// Eternal loop
 	while(true) {
 
-		// Work~~ OwO
-		res = -1;
+	// Work~~ OwO
+		fres = -1;
 		sd_bytes_written = 0;
 
 		//Dosimeter
@@ -111,9 +113,9 @@ void app_main (void) {
 		uint32_t dosimeter_sum = Dosimeter_Get_Sum();
 		rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_sum);
 		send_rf_package(&nrf24_config, &dosimeter_package, sizeof(dosimeter_package));
-		//uint16_t sd_buffer_size = sd_parse_to_text_dosimeter(&sd_buffer, dosimeter_package);
-		//res = f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
-		//res = f_sync(&dosimeter_file);
+		uint16_t sd_buffer_size = sd_parse_to_text_dosimeter(&sd_buffer, dosimeter_package);
+		fres = f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		fres = f_sync(&dosimeter_file);
 
 
 

@@ -15,7 +15,6 @@
 #include <LIS3MDL/DLIS3.h>
 #include <ATGM336H/nmea_gps.h>
 #include <1Wire_DS18B20/one_wire.h>
-#include <Photorezistor/photorezistor.h>
 #include <Dosimeter/dosimeter.h>
 
 #include <nRF24L01_PL/nrf24_upper_api.h>

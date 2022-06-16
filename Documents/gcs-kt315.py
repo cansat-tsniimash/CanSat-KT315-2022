@@ -15,9 +15,7 @@ radio=RF24_CLASS(24, 1)
 
 def generate_logfile_name(packet_type):
 	now = datetime.datetime.utcnow().replace(microsecond=0)
-	isostring = now.isoformat()  # string 2021-04-27T23:17:31
-	isostring = isostring.replace('-', '')  # string 20210427T23:17:31
-	isostring = isostring.replace(':', '')  # string 20210427T231731
+	isostring = now.isoformat().replace('-', '').replace(':', '')
 	if packet_type == 0:
 		packet_type_name = 'dosimeter.csv'
 	elif packet_type == 1:
@@ -106,9 +104,8 @@ if __name__ == '__main__':
 
 			package = radio.read(payload_size)
 			print(f'got data {package}')
-			packet_size = len(package)
-			biter = struct.pack('>B', packet_size)
-			record = biter + package
+			file.write(package)
+			file.flush()		
 			
 			package_service = package[:7]
 			package_crc = package[len(package) - 2:]
@@ -202,9 +199,6 @@ if __name__ == '__main__':
 
 
 				print(f'LOSS = {LOSS}, COUNTER = {COUNTER}, LOSS PERCENT = {LOSS / COUNTER * 100}%')
-
-			file.write(record)
-			file.flush()
 		else:
 			pass
 

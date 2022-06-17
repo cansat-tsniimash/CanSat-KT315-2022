@@ -1,6 +1,7 @@
 #include <photores.h>
 #include <includes.h>
 
+#include <errno.h>
 #include <math.h>
 
 static int channel_config_for_target(analog_target_t target, ADC_ChannelConfTypeDef * config)
@@ -28,22 +29,23 @@ static int channel_config_for_target(analog_target_t target, ADC_ChannelConfType
 }
 
 
-photoresistor_t photores_create_descriptor(analog_target_t target, float resist, ADC_HandleTypeDef *hadc) {
+photoresistor_t photores_create_descriptor(analog_target_t target, ADC_HandleTypeDef *hadc, float resist, uint16_t oversampling) {
 	photoresistor_t photoresistor_ = {
 		.target = target,
+		.adc = hadc,
 		.resist = resist,
-		.adc = hadc
+		.oversampling = oversampling
 	};
 	return photoresistor_;
 }
 
-void adc1_init(void) {
-	__HAL_ADC_ENABLE(&hadc1);
+void adc_init(ADC_HandleTypeDef *hadc) {
+	__HAL_ADC_ENABLE(hadc);
 	return;
 }
 
 
-static int analog_get_raw(analog_target_t target, uint16_t oversampling, uint16_t * value) {
+static int analog_get_raw(analog_target_t target, ADC_HandleTypeDef *hadc, uint16_t oversampling, uint16_t *value) {
 	int error = 0;
 
 	ADC_ChannelConfTypeDef target_config;
@@ -62,41 +64,16 @@ static int analog_get_raw(analog_target_t target, uint16_t oversampling, uint16_
 	for (uint16_t i = 0; i < oversampling; i++)
 	{
 		// Замер целевого напряжения
-		HAL_StatusTypeDef hal_error = HAL_ADC_ConfigChannel(_ADC_HANDLE, &target_config);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		hal_error = HAL_ADC_Start(&hadc1);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		hal_error = HAL_ADC_PollForConversion(_ADC_HANDLE, _ADC_HAL_TIMEOUT);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		raw_sum += HAL_ADC_GetValue(&hadc1);
-
+		HAL_ADC_ConfigChannel(hadc, &target_config);
+		HAL_ADC_Start(hadc);
+		HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
+		raw_sum += HAL_ADC_GetValue(hadc);
 
 		// Замер вдда
-		hal_error = HAL_ADC_ConfigChannel(_ADC_HANDLE, &vtref_config);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		hal_error = HAL_ADC_Start(&hadc1);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		hal_error = HAL_ADC_PollForConversion(_ADC_HANDLE, _ADC_HAL_TIMEOUT);
-		error = hal_status_to_errno(hal_error);
-		if (0 != error)
-			return error;
-
-		vrefint_sum += HAL_ADC_GetValue(&hadc1);
+		HAL_ADC_ConfigChannel(hadc, &vtref_config);
+		HAL_ADC_Start(hadc);
+		HAL_ADC_PollForConversion(hadc, HAL_MAX_DELAY);
+		vrefint_sum += HAL_ADC_GetValue(hadc);
 	}
 
 	uint32_t retval = raw_sum / oversampling;
@@ -108,11 +85,15 @@ static int analog_get_raw(analog_target_t target, uint16_t oversampling, uint16_
 	*value = (uint16_t)retval;
 	return 0;
 }
+/*
+ * error = hal_status_to_errno(hal_error);
+ * if (0 != error) return error;
+ */
 
 float photores_get_data(photoresistor_t photoresistor_) {
-	float voltage = 0;
-	analog_get_raw(photoresistor_.target, photoresistor_.oversampling, &voltage);
-	voltage = voltage * 3.3 / 4095;
+	uint16_t voltage_ = 0;
+	analog_get_raw(photoresistor_.target, photoresistor_.adc, photoresistor_.oversampling, &voltage_);
+	float voltage = voltage_ * 3.3 / 4095;
 	float resistance = voltage * (photoresistor_.resist) / (3.3 - voltage);
 	float lux = exp((3.823 - log(resistance / 1000)) / 0.816) * 10.764;
 	return lux;

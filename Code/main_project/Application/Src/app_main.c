@@ -56,7 +56,7 @@ void app_main (void) {
 	stmdev_ctx_t lsm = lsm_init(&lsm_setup);
 
 	//Photoresistors
-	adc1_init();
+	adc_init(&hadc1);
 	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 5);
 	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 5);
 
@@ -74,20 +74,53 @@ void app_main (void) {
 	//SD-Card
 	FATFS file_system;
 	FIL dosimeter_file;
-	FRESULT fres;
-	char sd_buffer[500] = {0};
-	UINT sd_bytes_written;
+	FIL bmp_file;
+	FIL ds_file;
+	FIL gps_file;
+	FIL inertial_file;
+	FIL sebastian_file;
+	FRESULT fres = -1;
+	char sd_buffer[300] = {0};
+	uint16_t sd_buffer_size = 0;
+	UINT sd_bytes_written = 0;
 	if (f_mount(&file_system, "", 1) == FR_OK) {
 		const char dosimeter_file_path[] = "dosimeter.csv";
+		const char bmp_file_path[] = "bmp.csv";
+		const char ds_file_path[] = "ds.csv";
+		const char gps_file_path[] = "gps.csv";
+		const char inertial_file_path[] = "inertial.csv";
+		const char sebastian_file_path[] = "sebastian.csv";
+
 		fres = f_open(&dosimeter_file, &dosimeter_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 		f_printf(&dosimeter_file, "flag;num;time from start;tps;ticks sum;crc\n");
+		f_sync(&dosimeter_file);
+
+		fres = f_open(&bmp_file, &bmp_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&bmp_file, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
+		f_sync(&bmp_file);
+
+		fres = f_open(&ds_file, &ds_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&ds_file, "flag;num;time from start; ;crc\n");
+		f_sync(&ds_file);
+
+		fres = f_open(&gps_file, &gps_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&gps_file, "flag;num;time from start; ;crc\n");
+		f_sync(&gps_file);
+
+		fres = f_open(&inertial_file, &inertial_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&inertial_file, "flag;num;time from start; ;crc\n");
+		f_sync(&inertial_file);
+
+		fres = f_open(&sebastian_file, &sebastian_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_printf(&sebastian_file, "flag;num;time from start; ;crc\n");
+		f_sync(&sebastian_file);
 	}
 	/* End Init */
 
 
 	/* Begin data structures */
 
-
+	bmp_data_t bmp_data = {0};
 
 	lis_data_t lis_data = {0};
 
@@ -104,19 +137,24 @@ void app_main (void) {
 	// Eternal loop
 	while(true) {
 
-	// Work~~ OwO
-		fres = -1;
-		sd_bytes_written = 0;
+		// Work~~ OwO
 
 		//Dosimeter
 		uint32_t dosimeter_tps = Dosimeter_Get_TPS();
 		uint32_t dosimeter_sum = Dosimeter_Get_Sum();
 		rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_sum);
 		send_rf_package(&nrf24_config, &dosimeter_package, sizeof(dosimeter_package));
-		uint16_t sd_buffer_size = sd_parse_to_text_dosimeter(&sd_buffer, dosimeter_package);
+		sd_buffer_size = sd_parse_to_text_dosimeter(&sd_buffer, dosimeter_package);
 		fres = f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
 		fres = f_sync(&dosimeter_file);
 
+		//BMP
+		bmp_data = bmp280_get_data(&bmp280);
+		rf_bmp_package_crc_t bmp_package = pack_rf_bmp(bmp_data.temperature, bmp_data.pressure);
+		send_rf_package(&nrf24_config, &bmp_package, sizeof(bmp_package));
+		sd_buffer_size = sd_parse_to_text_bmp(&sd_buffer, bmp_package);
+		fres = f_write(&bmp_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		fres = f_sync(&bmp_file);
 
 
 		/* Begin working with GNSS */

@@ -10,14 +10,14 @@ typedef enum {
 
 typedef struct {
 	analog_target_t target;
-	ADC_HandleTypeDef* adc;
+	ADC_HandleTypeDef *adc;
 	float resist;
 	uint16_t oversampling;
 } photoresistor_t;
 
-photoresistor_t photores_create_descriptor(float resist, ADC_HandleTypeDef *hadc);
-void adc1_init(void);
+photoresistor_t photores_create_descriptor(analog_target_t target, ADC_HandleTypeDef *hadc, float resist, uint16_t oversampling);
+void adc_init(ADC_HandleTypeDef *hadc);
 
-float photores_get_data(photoresistor_t photores_);
+float photores_get_data(photoresistor_t photoresistor_);
 
 #endif /* PHOTORES_H_ */

@@ -3,9 +3,9 @@
 
 #include <includes.h>
 
-void timer_update_ds18b20();
-void timer_update_sd();
-bool timecheck_ds18b20();
-bool timecheck_sd();
+void timer_update_ds18b20(void);
+void timer_update_sd(void);
+bool timecheck_ds18b20(void);
+bool timecheck_sd(void);
 
 #endif /* TIMERS_H_ */

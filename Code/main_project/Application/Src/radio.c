@@ -8,7 +8,7 @@ static uint16_t package_num_gps = 0;
 static uint16_t package_num_inertial = 0;
 static uint16_t package_num_sebastian = 0;
 
-unsigned short Crc16(unsigned char *buf, unsigned short len) {
+static unsigned short Crc16(unsigned char *buf, unsigned short len) {
 	unsigned short crc = 0xFFFF;
 	unsigned char i;
 	while (len--) {
@@ -18,7 +18,6 @@ unsigned short Crc16(unsigned char *buf, unsigned short len) {
 	}
 	return crc;
 }
-
 
 
 nrf24_spi_pins_sr_t nrf24_create_sr_descriptor(shift_reg_t *shift_reg, uint8_t pos_CE, uint8_t pos_CS) {
@@ -76,12 +75,13 @@ void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef
 
 
 
-rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32_t ticks_sum) {
+rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32_t ticks_per_last_minute, uint32_t ticks_sum) {
 	rf_dosimeter_package_t rf_package_ = {
 		.flag = RF_FLAG_DOSIMETER,
 		.num = package_num_dosimeter,
 		.time_from_start = HAL_GetTick(),
 		.ticks_per_last_second = ticks_per_last_sec,
+		.ticks_per_last_minute = ticks_per_last_minute,
 		.ticks_sum = ticks_sum
 	};
 	rf_dosimeter_package_crc_t rf_package_crc_ = {
@@ -108,12 +108,14 @@ rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure) {
 	return rf_package_crc_;
 }
 
-rf_ds_package_crc_t pack_rf_ds(float temperature, uint8_t status) {
+rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux, uint8_t status) {
 	rf_ds_package_t rf_package_ = {
 		.flag = RF_FLAG_DS,
 		.num = package_num_ds,
 		.time_from_start = HAL_GetTick(),
 		.ds18b20_temperature = temperature,
+		.rocket_lux = rckt_lux,
+		.seed_lux = seed_lux,
 		.status = status
 	};
 	rf_ds_package_crc_t rf_package_crc_ = {
@@ -144,7 +146,7 @@ rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint32_t tim
 	return rf_package_crc_;
 }
 
-rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3], float lux) {
+rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3]) {
 	rf_inertial_package_t rf_package_ = {
 		.flag = RF_FLAG_INERTIAL,
 		.num = package_num_inertial,
@@ -158,7 +160,6 @@ rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], in
 		.lis_mag[0] = mag[0],
 		.lis_mag[1] = mag[1],
 		.lis_mag[2] = mag[2],
-		.lux = lux
 	};
 	rf_inertial_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
@@ -190,15 +191,15 @@ rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]) {
 
 void send_rf_package(nrf24_service_t *nrf24_service, void *package, size_t size) {
 
-	nrf24_fifo_status(&nrf24_service->nrf24_lower_api_config, &nrf24_service->rf_fifo_status_rx, &nrf24_service->rf_fifo_status_tx);
+	nrf24_fifo_status(nrf24_service->nrf24_lower_api_config, &nrf24_service->rf_fifo_status_rx, &nrf24_service->rf_fifo_status_tx);
 	if (nrf24_service->rf_fifo_status_tx != NRF24_FIFO_FULL) {
-		nrf24_fifo_write(&nrf24_service->nrf24_lower_api_config, (uint8_t*) package, size, false);
-		nrf24_mode_tx(&nrf24_service->nrf24_lower_api_config);
+		nrf24_fifo_write(nrf24_service->nrf24_lower_api_config, (uint8_t*) package, size, false);
+		nrf24_mode_tx(nrf24_service->nrf24_lower_api_config);
 		HAL_Delay(3);
-		nrf24_mode_standby(&nrf24_service->nrf24_lower_api_config);
+		nrf24_mode_standby(nrf24_service->nrf24_lower_api_config);
 	} else {
-		nrf24_fifo_flush_tx(&nrf24_service->nrf24_lower_api_config);
+		nrf24_fifo_flush_tx(nrf24_service->nrf24_lower_api_config);
 		HAL_Delay(100);
 	}
-	nrf24_irq_clear(&nrf24_service->nrf24_lower_api_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
+	nrf24_irq_clear(nrf24_service->nrf24_lower_api_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
 }

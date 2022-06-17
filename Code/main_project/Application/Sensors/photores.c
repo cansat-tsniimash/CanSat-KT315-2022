@@ -45,13 +45,10 @@ void adc_init(ADC_HandleTypeDef *hadc) {
 }
 
 
-static int analog_get_raw(analog_target_t target, ADC_HandleTypeDef *hadc, uint16_t oversampling, uint16_t *value) {
-	int error = 0;
-
+static void analog_get_raw(analog_target_t target, ADC_HandleTypeDef *hadc, uint16_t oversampling, uint16_t *value) {
 	ADC_ChannelConfTypeDef target_config;
-	error = channel_config_for_target(target, &target_config);
-	if (0 != error)
-		return error;
+	channel_config_for_target(target, &target_config);
+
 
 	ADC_ChannelConfTypeDef vtref_config;
 	vtref_config.Channel = ADC_CHANNEL_VREFINT;
@@ -83,7 +80,7 @@ static int analog_get_raw(analog_target_t target, ADC_HandleTypeDef *hadc, uint1
 	retval = retval * (*VREFINT_CAL_ADDR) / vrefint ;
 
 	*value = (uint16_t)retval;
-	return 0;
+	return;
 }
 /*
  * error = hal_status_to_errno(hal_error);
@@ -91,9 +88,9 @@ static int analog_get_raw(analog_target_t target, ADC_HandleTypeDef *hadc, uint1
  */
 
 float photores_get_data(photoresistor_t photoresistor_) {
-	uint16_t voltage_ = 0;
-	analog_get_raw(photoresistor_.target, photoresistor_.adc, photoresistor_.oversampling, &voltage_);
-	float voltage = voltage_ * 3.3 / 4095;
+	uint16_t raw_voltage = 0;
+	analog_get_raw(photoresistor_.target, photoresistor_.adc, photoresistor_.oversampling, &raw_voltage);
+	float voltage = raw_voltage * 3.3 / 4095;
 	float resistance = voltage * (photoresistor_.resist) / (3.3 - voltage);
 	float lux = exp((3.823 - log(resistance / 1000)) / 0.816) * 10.764;
 	return lux;

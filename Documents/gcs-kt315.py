@@ -30,7 +30,7 @@ def generate_logfile_name(packet_type):
 		packet_type_name = 'sebastian.csv'
 	elif packet_type == -1:
 		packet_type_name = 'all.bin'
-	return f'kt315_telemetry_{isostring}_{packet_type_name}'
+	return f'telemetry/kt315_telemetry_{isostring}_{packet_type_name}'
 
 
 if __name__ == '__main__':
@@ -72,19 +72,19 @@ if __name__ == '__main__':
 
 	file = open(filename, 'wb')
 	file_dosimeter = open(filename_dosimeter, 'wb')
-	file_dosimeter.write(b'ticks per last second;ticks sum\n')
+	file_dosimeter.write(b'ticks per last second;ticks per last minute;ticks sum\n')
 	file_dosimeter.flush()
 	file_bmp = open(filename_bmp, 'wb')
 	file_bmp.write(b'bmp_temperature;bmp_pressure\n')
 	file_bmp.flush()
 	file_ds = open(filename_ds, 'wb')
-	file_ds.write(b'ds_temperature;status\n')
+	file_ds.write(b'ds_temperature;rocket lux;seed lux;status\n')
 	file_ds.flush()
 	file_gps = open(filename_gps, 'wb')
 	file_gps.write(b'longtitude;latitude;altitude;time_sec;time_microsec;fix\n')
 	file_gps.flush()
 	file_inertial = open(filename_inertial, 'wb')
-	file_inertial.write(b'lsm_acc_x;lsm_acc_y;lsm_acc_z;lsm_gyro_x;lsm_gyro_y;lsm_gyro_z;lis_mag_x;lis_mag_y;lis_mag_z;lux\n')
+	file_inertial.write(b'lsm_acc_x;lsm_acc_y;lsm_acc_z;lsm_gyro_x;lsm_gyro_y;lsm_gyro_z;lis_mag_x;lis_mag_y;lis_mag_z;\n')
 	file_inertial.flush()
 	file_sebastian = open(filename_sebastian, 'wb')
 	file_sebastian.write(b'quaternion 1;quaternion 2;quaternion 3;quaternion 4\n')
@@ -122,18 +122,19 @@ if __name__ == '__main__':
 				else:
 					if unpacked_service[0] == 0:
 						try:
-							unpacked_data = struct.unpack('<LL', package)
+							unpacked_data = struct.unpack('<LLL', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
 							ticks_per_last_second = unpacked_data[0]
-							ticks_sum = unpacked_data[1]
-							file_dosimeter.write(bytes(f'{ticks_per_last_second};{ticks_sum}\n', 'utf-8'))
+							ticks_per_last_minute = unpacked_data[1]
+							ticks_sum = unpacked_data[2]
+							file_dosimeter.write(bytes(f'{ticks_per_last_second};{ticks_per_last_minute};{ticks_sum}\n', 'utf-8'))
 							file_dosimeter.flush()
 
 					elif unpacked_service[0] == 1:
 						try:
-							unpacked_data = struct.unpack('<hL', package)
+							unpacked_data = struct.unpack('<hL', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
@@ -144,18 +145,20 @@ if __name__ == '__main__':
 
 					elif unpacked_service[0] == 2:
 						try:
-							unpacked_data = struct.unpack('<fB', package)
+							unpacked_data = struct.unpack('<fffB', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
 							ds_temperature = unpacked_data[0]
-							status = unpacked_data[1]
-							file_ds.write(bytes(f'{ds_temperature};{status}\n', 'utf-8'))
+							rckt_lux = unpacked_data[1]
+							seed_lux = unpacked_data[2]
+							status = unpacked_data[3]
+							file_ds.write(bytes(f'{ds_temperature};{rckt_lux};{seed_lux};{status}\n', 'utf-8'))
 							file_ds.flush()
 
 					elif unpacked_service[0] == 3:
 						try:
-							unpacked_data = struct.unpack('<ffhLLB', package)
+							unpacked_data = struct.unpack('<ffhLLB', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
@@ -170,20 +173,19 @@ if __name__ == '__main__':
 
 					elif unpacked_service[0] == 4:
 						try:
-							unpacked_data = struct.unpack('<hhhhhhhhhf', package)
+							unpacked_data = struct.unpack('<hhhhhhhhh', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
 							lsm_acc = unpacked_data[:3]
 							lsm_gyro = unpacked_data[3:6]
-							lis_mag = unpacked_data[6:9]
-							lux = unpacked_data[9]
-							file_inertial.write(bytes(f'{lsm_acc[0]};{lsm_acc[1]};{lsm_acc[2]};{lsm_gyro[0]};{lsm_gyro[1]};{lsm_gyro[2]};{lis_mag[0]};{lis_mag[1]};{lis_mag[2]};{lux}\n', 'utf-8'))
+							lis_mag = unpacked_data[6:]
+							file_inertial.write(bytes(f'{lsm_acc[0] / 2000};{lsm_acc[1] / 2000};{lsm_acc[2] / 2000};{lsm_gyro[0] / 15};{lsm_gyro[1] / 15};{lsm_gyro[2] / 15};{lis_mag[0] / 2000};{lis_mag[1] / 2000};{lis_mag[2] / 2000};\n', 'utf-8'))
 							file_inertial.flush()
 
 					elif unpacked_service[0] == 5:
 						try:
-							unpacked_data = struct.unpack('<ffff', package)
+							unpacked_data = struct.unpack('<ffff', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:

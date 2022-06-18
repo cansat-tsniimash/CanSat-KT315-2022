@@ -9,13 +9,13 @@ static int channel_config_for_target(analog_target_t target, ADC_ChannelConfType
 	int error = 0;
 	switch(target) {
 	case ANALOG_TARGET_ROCKET_CHECKER:
-		config->Channel = ADC_CHANNEL_0;
+		config->Channel = ADC_CHANNEL_5;
 		config->Rank = 1;
 		config->SamplingTime = ADC_SAMPLETIME_480CYCLES;
 		break;
 
 	case ANALOG_TARGER_SEED_CHECKER:
-		config->Channel = ADC_CHANNEL_0;
+		config->Channel = ADC_CHANNEL_6;
 		config->Rank = 1;
 		config->SamplingTime = ADC_SAMPLETIME_480CYCLES;
 		break;

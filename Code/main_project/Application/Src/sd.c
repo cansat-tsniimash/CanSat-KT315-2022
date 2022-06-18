@@ -23,13 +23,13 @@ uint16_t sd_parse_to_text_ds(char *buffer, rf_ds_package_crc_t data) {
 
 uint16_t sd_parse_to_text_gps(char *buffer, rf_gps_package_crc_t data) {
 	memset(buffer, 0, 300);
-	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%f;%f;%d;%lu;%lu;%u;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.longtitude, data.pack.latitude, data.pack.altitude, data.pack.time_sec, data.pack.time_microsec, data.pack.fix, data.crc);
+	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%f;%f;%d;%llu;%lu;%u;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.longtitude, data.pack.latitude, data.pack.altitude, data.pack.time_sec, data.pack.time_microsec, data.pack.fix, data.crc);
 	return num_written;
 }
 
-uint16_t sd_parse_to_text_inertial(char *buffer, rf_inertial_package_crc_t data) {
+uint16_t sd_parse_to_text_inertial(char *buffer, rf_inertial_package_crc_t data, float lsm_acc [3], float lsm_gyro [3], float lis_mag [3]) {
 	memset(buffer, 0, 300);
-	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%d;%d;%d;%d;%d;%d;%d;%d;%d;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.lsm_acc[0], data.pack.lsm_acc[1], data.pack.lsm_acc[2], data.pack.lsm_gyro[0], data.pack.lsm_gyro[1], data.pack.lsm_gyro[2], data.pack.lis_mag[0], data.pack.lis_mag[1], data.pack.lis_mag[2], data.crc);
+	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%f;%f;%f;%f;%f;%f;%f;%f;%f;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, lsm_acc[0], lsm_acc[1], lsm_acc[2], lsm_gyro[0], lsm_gyro[1], lsm_gyro[2], lis_mag[0], lis_mag[1], lis_mag[2], data.crc);
 	return num_written;
 }
 

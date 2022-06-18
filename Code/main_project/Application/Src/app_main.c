@@ -61,8 +61,11 @@ void app_main (void) {
 
 	//Photoresistors
 	adc_init(&hadc1);
-	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 5);
-	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 5);
+	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 2);
+	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 2);
+
+	//GPS
+	gps_init_stm32();
 
 	//NRF24
 	nrf24_lower_api_config_t nrf24_config = {0};
@@ -104,7 +107,7 @@ void app_main (void) {
 		f_printf(&ds_file, "flag;num;time from start;ds temperature;status;crc\n");
 
 		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_ALWAYS);
-		f_printf(&gps_file, "flag;num;time from start; ;crc\n");
+		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time_sec;time_microsec;fix;crc\n");
 
 		f_open(&inertial_file, inertial_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 		f_printf(&inertial_file, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");
@@ -133,6 +136,8 @@ void app_main (void) {
 	int16_t lsm_acc[3] = {0};
 	int16_t lsm_gyro[3] = {0};
 	int16_t lis_mag[3] = {0};
+
+	gps_data_t gps_data = {0};
 
 	/* End data structures */
 
@@ -170,6 +175,13 @@ void app_main (void) {
 			f_write(&ds_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
 		}
 
+		//GPS
+		if (gps_get_data(&gps_data)) {
+			rf_gps_package_crc_t gps_package = pack_rf_gps(gps_data.longtitude, gps_data.latitude, gps_data.altitude, gps_data.time_sec, gps_data.time_microsec, gps_data.fix);
+			send_rf_package(&nrf24, &gps_package, sizeof(gps_package));
+			sd_buffer_size = sd_parse_to_text_gps(sd_buffer, gps_package);
+			f_write(&gps_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		}
 
 		//Inertial
 		lsm_data = lsm_get_data(&lsm);
@@ -179,9 +191,8 @@ void app_main (void) {
 		for (int i = 0; i < 3; i++) lis_mag[i] = (int16_t)(lis_data.mag[i] * 2000);
 		rf_inertial_package_crc_t inertial_package = pack_rf_inertial(lsm_acc, lsm_gyro, lis_mag);
 		send_rf_package(&nrf24, &inertial_package, sizeof(inertial_package));
-		sd_buffer_size = sd_parse_to_text_inertial(sd_buffer, inertial_package);
+		sd_buffer_size = sd_parse_to_text_inertial(sd_buffer, inertial_package, lsm_data.acc, lsm_data.gyro, lis_data.mag);
 		f_write(&inertial_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
-
 
 		//SD Sync
 		if (timecheck_sd()) {

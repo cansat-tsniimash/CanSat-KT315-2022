@@ -148,13 +148,15 @@ void app_main (void) {
 		// Work~~ OwO
 
 		//Dosimeter
-		dosimeter_tps = Dosimeter_Get_TPS();
-		dosimeter_tpm = Dosimeter_Get_TPM();
-		dosimeter_sum = Dosimeter_Get_Sum();
-		rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_tpm, dosimeter_sum);
-		send_rf_package(&nrf24, &dosimeter_package, sizeof(dosimeter_package));
-		sd_buffer_size = sd_parse_to_text_dosimeter(sd_buffer, dosimeter_package);
-		f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		if (timecheck_dosimeter()) {
+			dosimeter_tps = Dosimeter_Get_TPS();
+			dosimeter_tpm = Dosimeter_Get_TPM();
+			dosimeter_sum = Dosimeter_Get_Sum();
+			rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_tpm, dosimeter_sum);
+			send_rf_package(&nrf24, &dosimeter_package, sizeof(dosimeter_package));
+			sd_buffer_size = sd_parse_to_text_dosimeter(sd_buffer, dosimeter_package);
+			f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		}
 
 		//BMP280
 		bmp_data = bmp280_get_data(&bmp280);
@@ -204,5 +206,7 @@ void app_main (void) {
 			f_sync(&sebastian_file);
 			timer_update_sd();
 		}
+
+
 	}
 }

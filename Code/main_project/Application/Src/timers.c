@@ -29,3 +29,11 @@ bool timecheck_sd(void) {
 		return true;
 	}
 }
+
+bool timecheck_dosimeter(void) {
+	if (dosimeter_1sec_past()) {
+		return true;
+	} else {
+		return false;
+	}
+}

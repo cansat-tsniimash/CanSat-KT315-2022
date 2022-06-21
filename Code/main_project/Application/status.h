@@ -1,0 +1,13 @@
+#ifndef STATUS_H_
+#define STATUS_H_
+
+typedef enum {
+	STATUS_BEFORE_ROCKET,
+	STATUS_IN_ROCKET,
+	STATUS_OUT_OF_ROCKET,
+	STATUS_STABILISED,
+	STATUS_STRING_BURNT,
+	STATUS_LANDED
+} status_t;
+
+#endif /* STATUS_H_ */

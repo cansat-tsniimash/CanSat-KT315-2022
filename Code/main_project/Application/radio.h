@@ -78,7 +78,7 @@ typedef struct __attribute__((packed)) { // GPS, отправка каждую �
 
 	float longtitude;
 	float latitude;
-	int16_t altitude;
+	float altitude;
 	uint64_t time_sec;
 	uint32_t time_microsec;
 	uint8_t fix;
@@ -135,7 +135,7 @@ void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef
 rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32_t ticks_per_last_minute, uint32_t ticks_sum);
 rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure);
 rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux, uint8_t status);
-rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint64_t time_sec, uint32_t time_microsec, uint8_t fix);
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, float alt, uint64_t time_sec, uint32_t time_microsec, uint8_t fix);
 rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3]);
 rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]);
 

@@ -72,6 +72,16 @@ void Error_Handler(void);
 #define Dosimeter_Pin GPIO_PIN_4
 #define Dosimeter_GPIO_Port GPIOA
 #define Dosimeter_EXTI_IRQn EXTI4_IRQn
+#define Photo_rocket_Pin GPIO_PIN_5
+#define Photo_rocket_GPIO_Port GPIOA
+#define Photo_seed_Pin GPIO_PIN_6
+#define Photo_seed_GPIO_Port GPIOA
+#define Switch_Pin GPIO_PIN_7
+#define Switch_GPIO_Port GPIOA
+#define Buzzer_Pin GPIO_PIN_8
+#define Buzzer_GPIO_Port GPIOA
+#define Incinerator_Pin GPIO_PIN_9
+#define Incinerator_GPIO_Port GPIOA
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

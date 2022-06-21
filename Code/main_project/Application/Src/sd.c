@@ -9,9 +9,9 @@ uint16_t sd_parse_to_text_dosimeter(char *buffer, rf_dosimeter_package_crc_t dat
 	return num_written;
 }
 
-uint16_t sd_parse_to_text_bmp(char *buffer, rf_bmp_package_crc_t data) {
+uint16_t sd_parse_to_text_bmp(char *buffer, rf_bmp_package_crc_t data, double temperature, double pressure) {
 	memset(buffer, 0, 300);
-	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%d;%lu;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.bmp_temperature, data.pack.bmp_pressure, data.crc);
+	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%lf;%lf;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, temperature, pressure, data.crc);
 	return num_written;
 }
 
@@ -23,7 +23,7 @@ uint16_t sd_parse_to_text_ds(char *buffer, rf_ds_package_crc_t data) {
 
 uint16_t sd_parse_to_text_gps(char *buffer, rf_gps_package_crc_t data) {
 	memset(buffer, 0, 300);
-	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%f;%f;%d;%llu;%lu;%u;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.longtitude, data.pack.latitude, data.pack.altitude, data.pack.time_sec, data.pack.time_microsec, data.pack.fix, data.crc);
+	uint16_t num_written = snprintf(buffer, 300, "%u;%u;%lu;%f;%f;%f;%llu;%lu;%u;%u\n", data.pack.flag, data.pack.num, data.pack.time_from_start, data.pack.longtitude, data.pack.latitude, data.pack.altitude, data.pack.time_sec, data.pack.time_microsec, data.pack.fix, data.crc);
 	return num_written;
 }
 

@@ -11,6 +11,7 @@ typedef struct {
 bme_spi_intf_sr bmp280_create_descriptor(int shift_reg_pin, SPI_HandleTypeDef* bus, shift_reg_t *shift_reg);
 struct bme280_dev bmp280_init(bme_spi_intf_sr *bmp_setup);
 bmp_data_t bmp280_get_data(struct bme280_dev *bmp_);
+float calculate_height(float pressure, float ground_pressure);
 
 #endif /* BMP280_H_ */
 

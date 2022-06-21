@@ -126,7 +126,7 @@ rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux
 	return rf_package_crc_;
 }
 
-rf_gps_package_crc_t pack_rf_gps(float lon, float lat, int16_t alt, uint64_t time_sec, uint32_t time_microsec, uint8_t fix) {
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, float alt, uint64_t time_sec, uint32_t time_microsec, uint8_t fix) {
 	rf_gps_package_t rf_package_ = {
 		.flag = RF_FLAG_GPS,
 		.num = package_num_gps,

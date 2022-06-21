@@ -1,6 +1,7 @@
 #include <app_main.h>
 #include <includes.h>
 #include <timers.h>
+#include <status.h>
 
 #include <shift_regs.h>
 
@@ -61,8 +62,8 @@ void app_main (void) {
 
 	//Photoresistors
 	adc_init(&hadc1);
-	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 2);
-	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 2);
+	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 10);
+	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 10);
 
 	//GPS
 	gps_init_stm32();
@@ -104,7 +105,7 @@ void app_main (void) {
 		f_printf(&bmp_file, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
 
 		f_open(&ds_file, ds_file_path, FA_WRITE | FA_CREATE_ALWAYS);
-		f_printf(&ds_file, "flag;num;time from start;ds temperature;status;crc\n");
+		f_printf(&ds_file, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
 
 		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time_sec;time_microsec;fix;crc\n");
@@ -129,7 +130,6 @@ void app_main (void) {
 	float ds_temperature = 0.0;
 	float photores_rckt_lux = 0.0;
 	float photores_seed_lux = 0.0;
-	uint8_t status = 0;
 
 	lsm_data_t lsm_data = {0};
 	lis_data_t lis_data = {0};
@@ -139,7 +139,47 @@ void app_main (void) {
 
 	gps_data_t gps_data = {0};
 
+	status_t status = STATUS_BEFORE_ROCKET;
+
 	/* End data structures */
+
+
+	/* Begin defaults */
+
+	float ground_pressure = 0.0;
+	float sum_pressure = 0.0;
+	float ground_lux_rckt = 0.0;
+	float sum_rckt = 0.0;
+	float ground_lux_seed = 0.0;
+	float sum_seed = 0.0;
+	for (uint8_t i = 0; i < 10; i++) {
+		bmp_data = bmp280_get_data(&bmp280);
+		ground_pressure = bmp_data.pressure;
+		ground_lux_rckt = photores_get_data(photores_rckt);
+		ground_lux_seed = photores_get_data(photores_seed);
+		sum_pressure += ground_pressure;
+		sum_rckt += ground_lux_rckt;
+		sum_seed += ground_lux_seed;
+	}
+	ground_pressure = sum_pressure / 10;
+	ground_lux_rckt = sum_rckt / 10;
+	ground_lux_seed = sum_seed / 10;
+
+	/* End defaults */
+
+
+	/* Begin status checker */
+
+	uint32_t time_on = 0;
+	uint32_t time_out = 0;
+	uint32_t time_stable = 0;
+	float height = 0.0;
+	float prev_height = 0.0;
+	uint32_t time_height = 0;
+	uint32_t time_prev_height = 0;
+	uint8_t height_delta_counter = 0;
+
+	/* Begin status checker */
 
 
 	// Eternal loop
@@ -162,16 +202,16 @@ void app_main (void) {
 		bmp_data = bmp280_get_data(&bmp280);
 		rf_bmp_package_crc_t bmp_package = pack_rf_bmp(bmp_data.temperature, bmp_data.pressure);
 		send_rf_package(&nrf24, &bmp_package, sizeof(bmp_package));
-		sd_buffer_size = sd_parse_to_text_bmp(sd_buffer, bmp_package);
+		sd_buffer_size = sd_parse_to_text_bmp(sd_buffer, bmp_package, bmp_data.temperature, bmp_data.pressure);
 		f_write(&bmp_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//DS18B20
+		photores_rckt_lux = photores_get_data(photores_rckt);
+		photores_seed_lux = photores_get_data(photores_seed);
 		if (timecheck_ds18b20()) {
 			ds_temperature = ds_get_data(&ds);
 			timer_update_ds18b20();
-			photores_rckt_lux = photores_get_data(photores_rckt);
-			photores_seed_lux = photores_get_data(photores_seed);
-			rf_ds_package_crc_t ds_package = pack_rf_ds(ds_temperature, photores_rckt_lux, photores_seed_lux, status);
+			rf_ds_package_crc_t ds_package = pack_rf_ds(ds_temperature, photores_rckt_lux, photores_seed_lux, (uint8_t)status);
 			send_rf_package(&nrf24, &ds_package, sizeof(ds_package));
 			sd_buffer_size = sd_parse_to_text_ds(sd_buffer, ds_package);
 			f_write(&ds_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
@@ -207,6 +247,49 @@ void app_main (void) {
 			timer_update_sd();
 		}
 
+		//Check status
+		if (STATUS_BEFORE_ROCKET == status) {
+			photores_rckt_lux = photores_get_data(photores_rckt);
+			photores_seed_lux = photores_get_data(photores_seed);
+			if (!HAL_GPIO_ReadPin(Switch_GPIO_Port, Switch_Pin)) {
+				time_on = HAL_GetTick();
+			}
+			if ((photores_rckt_lux < PHOTORESISTOR_CRITICAL_MODIFICATOR * ground_lux_rckt) && (HAL_GetTick() - time_on > 10000) && (HAL_GPIO_ReadPin(Switch_GPIO_Port, Switch_Pin))) {
+				status = STATUS_IN_ROCKET;
+			}
+		} else if (STATUS_IN_ROCKET == status) {
+			if (photores_rckt_lux > (1 - PHOTORESISTOR_CRITICAL_MODIFICATOR) * ground_lux_rckt) {
+				status = STATUS_OUT_OF_ROCKET;
+				time_out = HAL_GetTick();
+			}
+		} else if (STATUS_OUT_OF_ROCKET == status) {
+			if (HAL_GetTick() - time_out > STABILISATION_DELAY) {
+				status = STATUS_STABILISED;
+				time_stable = HAL_GetTick();
+			}
+		} else if (STATUS_STABILISED == status) {
+			HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 1);
+			if (HAL_GetTick() - time_stable > INCINERATOR_DELAY) {
+				HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 0);
+				status = STATUS_STRING_BURNT;
+			}
+		} else if (STATUS_STRING_BURNT == status) {
+			bmp_data = bmp280_get_data(&bmp280);
+			time_height = HAL_GetTick();
+			height = calculate_height(bmp_data.pressure, ground_pressure);
+			if (prev_height - height < 0.005 * (time_height - time_prev_height)) {
+				height_delta_counter++;
+				if (height_delta_counter > 9) {
+					status = STATUS_LANDED;
+				}
+			}
+			prev_height = height;
+			time_prev_height = time_height;
+		} else if (STATUS_LANDED == status) {
+			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
+		}
+
+		printf("status: %d\n", (uint8_t) status);
 
 	}
 }

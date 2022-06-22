@@ -108,7 +108,7 @@ void app_main (void) {
 		f_printf(&ds_file, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
 
 		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_ALWAYS);
-		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time_sec;time_microsec;fix;crc\n");
+		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");
 
 		f_open(&inertial_file, inertial_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 		f_printf(&inertial_file, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");

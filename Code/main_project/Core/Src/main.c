@@ -322,7 +322,7 @@ static void MX_USART6_UART_Init(void)
 {
 
   /* USER CODE BEGIN USART6_Init 0 */
-
+  LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_DMA2);
   /* USER CODE END USART6_Init 0 */
 
   LL_USART_InitTypeDef USART_InitStruct = {0};

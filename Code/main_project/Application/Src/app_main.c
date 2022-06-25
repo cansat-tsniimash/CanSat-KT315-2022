@@ -172,7 +172,7 @@ void app_main (void) {
 
 	uint32_t time_on = 0;
 	uint32_t time_out = 0;
-	uint32_t time_stable = 0;
+	uint32_t time_burning = 0;
 	float height = 0.0;
 	float prev_height = 0.0;
 	uint32_t time_height = 0;
@@ -265,11 +265,13 @@ void app_main (void) {
 		} else if (STATUS_OUT_OF_ROCKET == status) {
 			if (HAL_GetTick() - time_out > STABILISATION_DELAY) {
 				status = STATUS_STABILISED;
-				time_stable = HAL_GetTick();
 			}
 		} else if (STATUS_STABILISED == status) {
 			HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 1);
-			if (HAL_GetTick() - time_stable > INCINERATOR_DELAY) {
+			time_burning = HAL_GetTick();
+			status = STATUS_STARTED_BURNING;
+		} else if (STATUS_STARTED_BURNING == status) {
+			if (HAL_GetTick() - time_burning > INCINERATOR_DELAY) {
 				HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 0);
 				status = STATUS_STRING_BURNT;
 			}
@@ -287,6 +289,7 @@ void app_main (void) {
 			time_prev_height = time_height;
 		} else if (STATUS_LANDED == status) {
 			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
+			status = STATUS_AFTER;
 		}
 
 		printf("status: %d\n", (uint8_t) status);

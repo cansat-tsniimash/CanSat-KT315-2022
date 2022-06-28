@@ -86,34 +86,32 @@ void app_main (void) {
 	FIL gps_file;
 	FIL inertial_file;
 	FIL sebastian_file;
-	//FRESULT fres = -1;
 	char sd_buffer[300] = {0};
 	uint16_t sd_buffer_size = 0;
 	UINT sd_bytes_written = 0;
+	const char dosimeter_file_path[] = "dosimeter.csv";
+	const char bmp_file_path[] = "bmp.csv";
+	const char ds_file_path[] = "ds.csv";
+	const char gps_file_path[] = "gps.csv";
+	const char inertial_file_path[] = "inertial.csv";
+	const char sebastian_file_path[] = "sebastian.csv";
 	if (f_mount(&file_system, "", 1) == FR_OK) {
-		const char dosimeter_file_path[] = "dosimeter.csv";
-		const char bmp_file_path[] = "bmp.csv";
-		const char ds_file_path[] = "ds.csv";
-		const char gps_file_path[] = "gps.csv";
-		const char inertial_file_path[] = "inertial.csv";
-		const char sebastian_file_path[] = "sebastian.csv";
-
-		f_open(&dosimeter_file, dosimeter_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&dosimeter_file, dosimeter_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&dosimeter_file, "flag;num;time from start;tps;tpm;ticks sum;crc\n");
 
-		f_open(&bmp_file, bmp_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&bmp_file, bmp_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&bmp_file, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
 
-		f_open(&ds_file, ds_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&ds_file, ds_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&ds_file, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
 
-		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");
 
-		f_open(&inertial_file, inertial_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&inertial_file, inertial_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&inertial_file, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");
 
-		f_open(&sebastian_file, sebastian_file_path, FA_WRITE | FA_CREATE_ALWAYS);
+		f_open(&sebastian_file, sebastian_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
 		f_printf(&sebastian_file, "flag;num;time from start; ;crc\n");
 	}
 	/* End Init */
@@ -192,18 +190,22 @@ void app_main (void) {
 			dosimeter_tps = Dosimeter_Get_TPS();
 			dosimeter_tpm = Dosimeter_Get_TPM();
 			dosimeter_sum = Dosimeter_Get_Sum();
+
 			rf_dosimeter_package_crc_t dosimeter_package = pack_rf_dosimeter(dosimeter_tps, dosimeter_tpm, dosimeter_sum);
 			send_rf_package(&nrf24, &dosimeter_package, sizeof(dosimeter_package));
-			sd_buffer_size = sd_parse_to_text_dosimeter(sd_buffer, &dosimeter_package);
-			f_write(&dosimeter_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+
+			sd_buffer_size = sd_parse_to_bytes_dosimeter(sd_buffer, &dosimeter_package);
+			file_write(&file_system, &dosimeter_file, dosimeter_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
+
+
 		}
 
 		//BMP280
 		bmp_data = bmp280_get_data(&bmp280);
 		rf_bmp_package_crc_t bmp_package = pack_rf_bmp(bmp_data.temperature, bmp_data.pressure);
 		send_rf_package(&nrf24, &bmp_package, sizeof(bmp_package));
-		sd_buffer_size = sd_parse_to_text_bmp(sd_buffer, &bmp_package, bmp_data.temperature, bmp_data.pressure);
-		f_write(&bmp_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		sd_buffer_size = sd_parse_to_bytes_bmp(sd_buffer, &bmp_package, bmp_data.temperature, bmp_data.pressure);
+		file_write(&file_system, &bmp_file, bmp_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//DS18B20
 		photores_rckt_lux = photores_get_data(photores_rckt);
@@ -213,16 +215,16 @@ void app_main (void) {
 			timer_update_ds18b20();
 			rf_ds_package_crc_t ds_package = pack_rf_ds(ds_temperature, photores_rckt_lux, photores_seed_lux, (uint8_t)status);
 			send_rf_package(&nrf24, &ds_package, sizeof(ds_package));
-			sd_buffer_size = sd_parse_to_text_ds(sd_buffer, &ds_package);
-			f_write(&ds_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+			sd_buffer_size = sd_parse_to_bytes_ds(sd_buffer, &ds_package);
+			file_write(&file_system, &ds_file, ds_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 		}
 
 		//GPS
 		if (gps_get_data(&gps_data)) {
 			rf_gps_package_crc_t gps_package = pack_rf_gps(gps_data.longtitude, gps_data.latitude, gps_data.altitude, gps_data.time_sec, gps_data.time_microsec, gps_data.fix);
 			send_rf_package(&nrf24, &gps_package, sizeof(gps_package));
-			sd_buffer_size = sd_parse_to_text_gps(sd_buffer, &gps_package);
-			f_write(&gps_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+			sd_buffer_size = sd_parse_to_bytes_gps(sd_buffer, &gps_package);
+			file_write(&file_system, &gps_file, gps_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 		}
 
 		//Inertial
@@ -233,8 +235,8 @@ void app_main (void) {
 		for (int i = 0; i < 3; i++) lis_mag[i] = (int16_t)(lis_data.mag[i] * 2000);
 		rf_inertial_package_crc_t inertial_package = pack_rf_inertial(lsm_acc, lsm_gyro, lis_mag);
 		send_rf_package(&nrf24, &inertial_package, sizeof(inertial_package));
-		sd_buffer_size = sd_parse_to_text_inertial(sd_buffer, &inertial_package, lsm_data.acc, lsm_data.gyro, lis_data.mag);
-		f_write(&inertial_file, sd_buffer, sd_buffer_size, &sd_bytes_written);
+		sd_buffer_size = sd_parse_to_bytes_inertial(sd_buffer, &inertial_package, lsm_data.acc, lsm_data.gyro, lis_data.mag);
+		file_write(&file_system, &inertial_file, inertial_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//SD Sync
 		if (timecheck_sd()) {

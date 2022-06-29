@@ -79,7 +79,7 @@ typedef struct __attribute__((packed)) { // GPS, отправка каждую �
 	float longtitude;
 	float latitude;
 	float altitude;
-	uint64_t time_sec;
+	uint32_t time_sec;
 	uint32_t time_microsec;
 	uint8_t fix;
 } rf_gps_package_t;
@@ -130,12 +130,11 @@ nrf24_pipe_config_t nrf24_create_pipe_descriptor(bool enable_auto_ack, uint64_t 
 void nrf24_init_stm32(nrf24_lower_api_config_t *nrf24_config_, SPI_HandleTypeDef *bus, nrf24_spi_pins_sr_t *nrf24_sr_setup_, nrf24_rf_config_t *nrf24_rf_setup_, nrf24_protocol_config_t *nrf24_protocol_setup_, nrf24_pipe_config_t *nrf24_pipe_setup_);
 
 
-
 //Funcs for packing data for radio
 rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32_t ticks_per_last_minute, uint32_t ticks_sum);
 rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure);
 rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux, uint8_t status);
-rf_gps_package_crc_t pack_rf_gps(float lon, float lat, float alt, uint64_t time_sec, uint32_t time_microsec, uint8_t fix);
+rf_gps_package_crc_t pack_rf_gps(float lon, float lat, float alt, uint32_t time_sec, uint32_t time_microsec, uint8_t fix);
 rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], int16_t mag [3]);
 rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]);
 
@@ -144,49 +143,3 @@ void send_rf_package(nrf24_service_t *nrf24_service, void *package, size_t size)
 
 
 #endif /* RADIO_H_ */
-
-/*
-nrf24_rf_config_t nrf24_rf_setup = {
-	.data_rate = NRF24_DATARATE_250_KBIT,
-	.tx_power = NRF24_TXPOWER_MINUS_18_DBM,
-	.rf_channel = 116
-};
-nrf24_protocol_config_t nrf24_protocol_setup = {
-	.crc_size = NRF24_CRCSIZE_DISABLE,
-	.address_width = NRF24_ADDRES_WIDTH_5_BYTES,
-	.en_dyn_payload_size = true,
-	.en_ack_payload = true,
-	.en_dyn_ack = true,
-	.auto_retransmit_count = 0,
-	.auto_retransmit_delay = 0
-};
-nrf24_pipe_config_t nrf24_pipe_setup = {
-	.enable_auto_ack = false,
-	.address = 0xacacacacac,
-	.payload_size = -1
-};
-nrf24_spi_pins_sr_t nrf24_shift_reg_setup = {
-	.this = &shift_reg_rf,
-	.pos_CE = 0,
-	.pos_CS = 1
-};
-*/
-
-
-/* Begin radio data transmit
-
-	nrf24_fifo_status(&nrf24_lowlevel_config, &rf_fifo_status_rx, &rf_fifo_status_tx);
-	if (rf_fifo_status_tx != NRF24_FIFO_FULL) {
-		rf_package_crc = pack(&bmp_data, &lsm_data, package_num);
-		package_num++;
-		nrf24_fifo_write(&nrf24_lowlevel_config, (uint8_t*) &rf_package_crc, sizeof(rf_package_crc), false);
-		nrf24_mode_tx(&nrf24_lowlevel_config);
-		HAL_Delay(3);
-		nrf24_mode_standby(&nrf24_lowlevel_config);
-	} else {
-		nrf24_fifo_flush_tx(&nrf24_lowlevel_config);
-		HAL_Delay(100);
-	}
-	nrf24_irq_clear(&nrf24_lowlevel_config, NRF24_IRQ_RX_DR | NRF24_IRQ_TX_DR | NRF24_IRQ_MAX_RT);
-
-End radio data transmit */

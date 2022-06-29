@@ -39,10 +39,10 @@ uint16_t sd_parse_to_bytes_ds(char *buffer, rf_ds_package_crc_t *data) {
 	return num_written;
 }
 
-uint16_t sd_parse_to_bytes_gps(char *buffer, rf_gps_package_crc_t *data) {
+uint16_t sd_parse_to_bytes_gps(char *buffer, rf_gps_package_crc_t *data, uint64_t time_s) {
 	memset(buffer, 0, 300);
-	uint32_t time_sec_high = data->pack.time_sec >> (4 * 8);
-	uint32_t time_sec_low = data->pack.time_sec & 0xFFFFFFFF;
+	uint32_t time_sec_high = time_s >> (4 * 8);
+	uint32_t time_sec_low = time_s & 0xFFFFFFFF;
 	uint16_t num_written = snprintf(
 			buffer, 300,
 			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%"PRIu32";%"PRIu32";%"PRIu32";%d;%"PRIu16"\n",

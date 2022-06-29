@@ -15,5 +15,6 @@ void file_system_mount(FATFS* file_system);
 void file_open(FATFS* file_system, FIL* file, const char* path);
 void file_puts(FATFS* file_system, FIL* file, const char* path, const char* str);
 void file_write(FATFS* file_system, FIL* file, const char* path, char* buffer, uint16_t buffer_size, UINT* bytes_written);
+void file_sync(FATFS* file_system, FIL* file, const char* path);
 
 #endif /* SD_H_ */

@@ -86,34 +86,38 @@ void app_main (void) {
 	FIL gps_file;
 	FIL inertial_file;
 	FIL sebastian_file;
+
 	char sd_buffer[300] = {0};
 	uint16_t sd_buffer_size = 0;
 	UINT sd_bytes_written = 0;
+
 	const char dosimeter_file_path[] = "dosimeter.csv";
 	const char bmp_file_path[] = "bmp.csv";
 	const char ds_file_path[] = "ds.csv";
 	const char gps_file_path[] = "gps.csv";
 	const char inertial_file_path[] = "inertial.csv";
 	const char sebastian_file_path[] = "sebastian.csv";
-	if (f_mount(&file_system, "", 1) == FR_OK) {
-		f_open(&dosimeter_file, dosimeter_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&dosimeter_file, "flag;num;time from start;tps;tpm;ticks sum;crc\n");
 
-		f_open(&bmp_file, bmp_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&bmp_file, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
+	file_system_mount(&file_system);
 
-		f_open(&ds_file, ds_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&ds_file, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
+	file_open(&file_system, &dosimeter_file, dosimeter_file_path);
+	file_puts(&file_system, &dosimeter_file, dosimeter_file_path, "flag;num;time from start;tps;tpm;ticks sum;crc\n");
 
-		f_open(&gps_file, gps_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&gps_file, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");
+	file_open(&file_system, &bmp_file, bmp_file_path);
+	file_puts(&file_system, &bmp_file, bmp_file_path, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
 
-		f_open(&inertial_file, inertial_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&inertial_file, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");
+	file_open(&file_system, &ds_file, ds_file_path);
+	file_puts(&file_system, &ds_file, ds_file_path, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
 
-		f_open(&sebastian_file, sebastian_file_path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
-		f_printf(&sebastian_file, "flag;num;time from start; ;crc\n");
-	}
+	file_open(&file_system, &gps_file, gps_file_path);
+	file_puts(&file_system, &gps_file, gps_file_path, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");
+
+	file_open(&file_system, &inertial_file, inertial_file_path);
+	file_puts(&file_system, &inertial_file, inertial_file_path, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");
+
+	file_open(&file_system, &sebastian_file, sebastian_file_path);
+	file_puts(&file_system, &sebastian_file, sebastian_file_path, "flag;num;time from start; quaternion 1; quaternion 2; quaternion 3; quaternion 4;crc\n");
+
 	/* End Init */
 
 
@@ -179,10 +183,8 @@ void app_main (void) {
 
 	/* Begin status checker */
 
-
 	// Eternal loop
 	while(true) {
-
 		// Work~~ OwO
 
 		//Dosimeter
@@ -198,8 +200,6 @@ void app_main (void) {
 
 			sd_buffer_size = sd_parse_to_bytes_dosimeter(sd_buffer, &dosimeter_package);
 			file_write(&file_system, &dosimeter_file, dosimeter_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
-
-
 		}
 
 		//BMP280
@@ -235,6 +235,7 @@ void app_main (void) {
 			if (timecheck_nrf()) {
 				send_rf_package(&nrf24, &gps_package, sizeof(gps_package));
 			}
+
 			sd_buffer_size = sd_parse_to_bytes_gps(sd_buffer, &gps_package);
 			file_write(&file_system, &gps_file, gps_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 		}
@@ -255,12 +256,12 @@ void app_main (void) {
 
 		//SD Sync
 		if (timecheck_sd()) {
-			f_sync(&dosimeter_file);
-			f_sync(&bmp_file);
-			f_sync(&ds_file);
-			f_sync(&gps_file);
-			f_sync(&inertial_file);
-			f_sync(&sebastian_file);
+			file_sync(&file_system, &dosimeter_file, dosimeter_file_path);
+			file_sync(&file_system, &bmp_file, bmp_file_path);
+			file_sync(&file_system, &ds_file, ds_file_path);
+			file_sync(&file_system, &gps_file, gps_file_path);
+			file_sync(&file_system, &inertial_file, inertial_file_path);
+			file_sync(&file_system, &sebastian_file, sebastian_file_path);
 			timer_update_sd();
 		}
 
@@ -308,8 +309,5 @@ void app_main (void) {
 			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 			status = STATUS_AFTER;
 		}
-
-		printf("status: %d\n", (uint8_t) status);
-
 	}
 }

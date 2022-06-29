@@ -25,13 +25,14 @@ static void status_update_nrf(void) {
 	if (nrf_status) {
 		if (HAL_GetTick() - nrf_last_status_change > NRF_DELAY_ON) {
 			nrf_status = NRF_OFF;
+			timer_update_nrf();
 		}
 	} else {
 		if (HAL_GetTick() - nrf_last_status_change > NRF_DELAY_OFF) {
 			nrf_status = NRF_ON;
+			timer_update_nrf();
 		}
 	}
-	timer_update_nrf();
 }
 
 bool timecheck_ds18b20(void) {

@@ -8,7 +8,7 @@ uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *d
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%"PRIu32";%"PRIu32";%"PRIu32";%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%"PRIu32";%"PRIu32";%"PRIu32";%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			data->pack.ticks_per_last_second, data->pack.ticks_per_last_minute, data->pack.ticks_sum,
 			data->crc);
@@ -19,7 +19,7 @@ uint16_t sd_parse_to_bytes_bmp(char *buffer, rf_bmp_package_crc_t *data, double 
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%f;%f;%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			temperature, pressure,
 			data->crc);
@@ -30,7 +30,7 @@ uint16_t sd_parse_to_bytes_ds(char *buffer, rf_ds_package_crc_t *data) {
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%f;%f;%f;%"PRIu8";%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%d;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			data->pack.ds18b20_temperature,
 			data->pack.rocket_lux, data->pack.seed_lux,
@@ -45,7 +45,7 @@ uint16_t sd_parse_to_bytes_gps(char *buffer, rf_gps_package_crc_t *data) {
 	uint32_t time_sec_low = data->pack.time_sec & 0xFFFFFFFF;
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%f;%f;%f;%"PRIu32";%"PRIu32";%"PRIu32";%"PRIu8";%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%"PRIu32";%"PRIu32";%"PRIu32";%d;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			data->pack.longtitude, data->pack.latitude, data->pack.altitude,
 			time_sec_high, time_sec_low, data->pack.time_microsec,
@@ -58,7 +58,7 @@ uint16_t sd_parse_to_bytes_inertial(char *buffer, rf_inertial_package_crc_t *dat
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%f;%f;%f;%f;%f;%f;%f;%f;%f;%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%f;%f;%f;%f;%f;%f;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			lsm_acc[0], lsm_acc[1], lsm_acc[2],
 			lsm_gyro[0], lsm_gyro[1], lsm_gyro[2],
@@ -71,7 +71,7 @@ uint16_t sd_parse_to_bytes_sebastian(char *buffer, rf_sebastian_package_crc_t *d
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%"PRIu8";%"PRIu16";%"PRIu32";%f;%f;%f;%f;%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%f;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			data->pack.quaternion[0], data->pack.quaternion[1], data->pack.quaternion[2], data->pack.quaternion[3],
 			data->crc);
@@ -89,11 +89,11 @@ void file_system_mount(FATFS* file_system) {
 
 void file_open(FATFS* file_system, FIL* file, const char* path) {
 	FRESULT fres = 0;
-	fres = f_open(file, path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
+	fres = f_open(file, path, FA_WRITE | FA_OPEN_APPEND);
 	if (FR_OK != fres) {
 		f_mount(NULL, "", 1);
 		file_system_mount(file_system);
-		fres = f_open(file, path, FA_WRITE | FA_CREATE_NEW | FA_OPEN_APPEND);
+		fres = f_open(file, path, FA_WRITE | FA_OPEN_APPEND);
 		if (FR_OK != fres) {
 			NVIC_SystemReset();
 		}
@@ -102,18 +102,18 @@ void file_open(FATFS* file_system, FIL* file, const char* path) {
 }
 
 void file_puts(FATFS* file_system, FIL* file, const char* path, const char* str) {
-	FRESULT fres = 0;
+	int fres = 0;
 	fres = f_puts(str, file);
-	if (FR_OK != fres) {
+	if (0 > fres) {
 		f_close(file);
 		file_open(file_system, file, path);
 		fres = f_puts(str, file);
-		if (FR_OK != fres) {
+		if (0 > fres) {
 			f_mount(NULL, "", 1);
 			file_system_mount(file_system);
 			file_open(file_system, file, path);
 			fres = f_puts(str, file);
-			if (FR_OK != fres) {
+			if (0 > fres) {
 				NVIC_SystemReset();
 			} else {
 				f_puts("remounted, file error fixed\n", file);
@@ -149,4 +149,20 @@ void file_write(FATFS* file_system, FIL* file, const char* path, char* buffer, u
 	return;
 }
 
-
+void file_sync(FATFS* file_system, FIL* file, const char* path) {
+	FRESULT fres = 0;
+	fres = f_sync(file);
+	if (FR_OK != fres) {
+		f_close(file);
+		file_open(file_system, file, path);
+		fres = f_sync(file);
+		if (FR_OK != fres) {
+			f_mount(NULL, "", 1);
+			file_system_mount(file_system);
+			file_open(file_system, file, path);
+		} else {
+			file_puts(file_system, file, path, "reopened, file error fixed\n");
+		}
+	}
+	return;
+}

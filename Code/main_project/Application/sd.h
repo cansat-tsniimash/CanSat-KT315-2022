@@ -4,6 +4,8 @@
 #include <includes.h>
 #include <radio.h>
 
+#define SD_REBOOT_DELAY 1000
+
 uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *data);
 uint16_t sd_parse_to_bytes_bmp(char *buffer, rf_bmp_package_crc_t *data, double temperature, double pressure);
 uint16_t sd_parse_to_bytes_ds(char *buffer, rf_ds_package_crc_t *data);

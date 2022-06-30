@@ -2,6 +2,9 @@
 #include <inttypes.h>
 #include <includes.h>
 
+#include <timers.h>
+extern uint32_t sd_reboot_timer;
+
 #include <radio.h>
 
 uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *data) {
@@ -78,11 +81,22 @@ uint16_t sd_parse_to_bytes_sebastian(char *buffer, rf_sebastian_package_crc_t *d
 	return num_written;
 }
 
+static void system_reset(void) {
+	if (0 == sd_reboot_timer) {
+		timer_update_sd_reboot();
+	} else {
+		if (HAL_GetTick() - sd_reboot_timer > SD_REBOOT_DELAY) {
+			NVIC_SystemReset();
+		}
+	}
+	return;
+}
+
 void file_system_mount(FATFS* file_system) {
 	FRESULT fres = 0;
 	fres = f_mount(file_system, "", 1);
 	if (FR_OK != fres) {
-		NVIC_SystemReset();
+		system_reset();
 	}
 	return;
 }
@@ -95,7 +109,7 @@ void file_open(FATFS* file_system, FIL* file, const char* path) {
 		file_system_mount(file_system);
 		fres = f_open(file, path, FA_WRITE | FA_OPEN_APPEND);
 		if (FR_OK != fres) {
-			NVIC_SystemReset();
+			system_reset();
 		}
 	}
 	return;
@@ -114,7 +128,7 @@ void file_puts(FATFS* file_system, FIL* file, const char* path, const char* str)
 			file_open(file_system, file, path);
 			fres = f_puts(str, file);
 			if (0 > fres) {
-				NVIC_SystemReset();
+				system_reset();
 			} else {
 				f_puts("remounted, file error fixed\n", file);
 			}
@@ -138,7 +152,7 @@ void file_write(FATFS* file_system, FIL* file, const char* path, char* buffer, u
 			file_open(file_system, file, path);
 			fres = f_write(file, buffer, buffer_size, bytes_written);
 			if (FR_OK != fres) {
-				NVIC_SystemReset();
+				system_reset();
 			} else {
 				file_puts(file_system, file, path, "remounted, file error fixed\n");
 			}

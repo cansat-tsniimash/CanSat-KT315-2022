@@ -100,7 +100,7 @@ if __name__ == '__main__':
 			payload_size = static_payload_size
 			if payload_size is None:
 				payload_size = radio.getDynamicPayloadSize()
-				print(payload_size)
+				print(f'\n{payload_size}')
 
 			package = radio.read(payload_size)
 			print(f'got data {package}')
@@ -158,9 +158,9 @@ if __name__ == '__main__':
 
 					elif unpacked_service[0] == 3:
 						try:
-							unpacked_data = struct.unpack('<ffhLLB', package_data)
+							unpacked_data = struct.unpack('<fffLLB', package_data)
 						except Exception as e:
-							print(f'{e}\ndata received: {len(package)} bytes')
+							print(f'{e}\ndata received: {len(package_data)} bytes')
 						else:
 							longtitude = unpacked_data[0]
 							latitude = unpacked_data[1]

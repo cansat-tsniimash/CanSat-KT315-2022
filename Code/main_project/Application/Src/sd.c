@@ -18,13 +18,14 @@ uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *d
 	return num_written;
 }
 
-uint16_t sd_parse_to_bytes_bmp(char *buffer, rf_bmp_package_crc_t *data, double temperature, double pressure) {
+uint16_t sd_parse_to_bytes_bmp(char *buffer, rf_bmp_package_crc_t *data) {
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%d;%"PRIu16";%"PRIu32";%f;%f;%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%d;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
-			temperature, pressure,
+			data->pack.bmp_temperature, data->pack.bmp_pressure,
+			data->pack.status,
 			data->crc);
 	return num_written;
 }
@@ -33,11 +34,10 @@ uint16_t sd_parse_to_bytes_ds(char *buffer, rf_ds_package_crc_t *data) {
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
 			buffer, 300,
-			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%d;%"PRIu16"\n",
+			"%d;%"PRIu16";%"PRIu32";%f;%f;%f;%"PRIu16"\n",
 			data->pack.flag, data->pack.num, data->pack.time_from_start,
 			data->pack.ds18b20_temperature,
 			data->pack.rocket_lux, data->pack.seed_lux,
-			data->pack.status,
 			data->crc);
 	return num_written;
 }

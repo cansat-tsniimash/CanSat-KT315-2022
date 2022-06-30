@@ -63,8 +63,8 @@ void app_main (void) {
 
 	//Photoresistors
 	adc_init(&hadc1);
-	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 10);
-	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 10);
+	photoresistor_t photores_rckt = photores_create_descriptor(ANALOG_TARGET_ROCKET_CHECKER, &hadc1, 2000, 5);
+	photoresistor_t photores_seed = photores_create_descriptor(ANALOG_TARGER_SEED_CHECKER, &hadc1, 2000, 5);
 
 	//GPS
 	gps_init_stm32();
@@ -207,20 +207,20 @@ void app_main (void) {
 		//BMP280
 		bmp_data = bmp280_get_data(&bmp280);
 
-		rf_bmp_package_crc_t bmp_package = pack_rf_bmp(bmp_data.temperature, bmp_data.pressure);
+		rf_bmp_package_crc_t bmp_package = pack_rf_bmp(bmp_data.temperature, bmp_data.pressure, (uint8_t)status);
 		send_rf_package(&nrf24, &bmp_package, sizeof(bmp_package));
 
-		sd_buffer_size = sd_parse_to_bytes_bmp(sd_buffer, &bmp_package, bmp_data.temperature, bmp_data.pressure);
+		sd_buffer_size = sd_parse_to_bytes_bmp(sd_buffer, &bmp_package);
 		file_write(&file_system, &bmp_file, bmp_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//DS18B20
-		photores_rckt_lux = photores_get_data(photores_rckt);
-		photores_seed_lux = photores_get_data(photores_seed);
 		if (timecheck_ds18b20()) {
+			photores_rckt_lux = photores_get_data(photores_rckt);
+			photores_seed_lux = photores_get_data(photores_seed);
 			ds_temperature = ds_get_data(&ds);
 			timer_update_ds18b20();
 
-			rf_ds_package_crc_t ds_package = pack_rf_ds(ds_temperature, photores_rckt_lux, photores_seed_lux, (uint8_t)status);
+			rf_ds_package_crc_t ds_package = pack_rf_ds(ds_temperature, photores_rckt_lux, photores_seed_lux);
 			send_rf_package(&nrf24, &ds_package, sizeof(ds_package));
 
 			sd_buffer_size = sd_parse_to_bytes_ds(sd_buffer, &ds_package);
@@ -252,7 +252,7 @@ void app_main (void) {
 		file_write(&file_system, &inertial_file, inertial_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//Sebastian Madgwick
-		MadgwickAHRSupdate(seb_quaternion, lsm_data.gyro[0], lsm_data.gyro[1], lsm_data.gyro[2], lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2], lis_data.mag[0], lis_data.mag[1], lis_data.mag[2], (float)seb_delta, 0.3);
+		MadgwickAHRSupdate(seb_quaternion, lsm_data.gyro[0], lsm_data.gyro[1], lsm_data.gyro[2], lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2], -1 * lis_data.mag[0], -1 * lis_data.mag[1], -1 * lis_data.mag[2], (float)seb_delta / 1000.0, 0.3);
 
 		rf_sebastian_package_crc_t sebastian_package = pack_rf_sebastian(seb_quaternion);
 		send_rf_package(&nrf24, &sebastian_package, sizeof(sebastian_package));
@@ -303,7 +303,7 @@ void app_main (void) {
 			bmp_data = bmp280_get_data(&bmp280);
 			time_height = HAL_GetTick();
 			height = calculate_height(bmp_data.pressure, ground_pressure);
-			if (prev_height - height < 0.005 * (time_height - time_prev_height)) {
+			if (prev_height - height < 0.00001 * (time_height - time_prev_height)) {
 				height_delta_counter++;
 				if (height_delta_counter > 9) {
 					status = STATUS_LANDED;

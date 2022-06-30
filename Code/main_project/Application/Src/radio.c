@@ -92,13 +92,14 @@ rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32
 	return rf_package_crc_;
 }
 
-rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure) {
+rf_bmp_package_crc_t pack_rf_bmp(double temperature, double pressure, uint8_t status) {
 	rf_bmp_package_t rf_package_ = {
 		.flag = RF_FLAG_BMP,
 		.num = package_num_bmp,
 		.time_from_start = HAL_GetTick(),
 		.bmp_temperature = temperature,
-		.bmp_pressure = pressure
+		.bmp_pressure = pressure,
+		.status = status
 	};
 	rf_bmp_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
@@ -108,15 +109,14 @@ rf_bmp_package_crc_t pack_rf_bmp(int16_t temperature, uint32_t pressure) {
 	return rf_package_crc_;
 }
 
-rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux, uint8_t status) {
+rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux) {
 	rf_ds_package_t rf_package_ = {
 		.flag = RF_FLAG_DS,
 		.num = package_num_ds,
 		.time_from_start = HAL_GetTick(),
 		.ds18b20_temperature = temperature,
 		.rocket_lux = rckt_lux,
-		.seed_lux = seed_lux,
-		.status = status
+		.seed_lux = seed_lux
 	};
 	rf_ds_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,

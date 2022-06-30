@@ -81,6 +81,7 @@ void app_main (void) {
 
 	//SD-Card
 	FATFS file_system;
+	FIL defaults;
 	FIL dosimeter_file;
 	FIL bmp_file;
 	FIL ds_file;
@@ -91,7 +92,9 @@ void app_main (void) {
 	char sd_buffer[300] = {0};
 	uint16_t sd_buffer_size = 0;
 	UINT sd_bytes_written = 0;
+	FRESULT fres = 0;
 
+	const char defaults_file_path[] = "defaults.bin";
 	const char dosimeter_file_path[] = "dosimeter.csv";
 	const char bmp_file_path[] = "bmp.csv";
 	const char ds_file_path[] = "ds.csv";
@@ -170,6 +173,16 @@ void app_main (void) {
 	ground_pressure = sum_pressure / 10;
 	ground_lux_rckt = sum_rckt / 10;
 	ground_lux_seed = sum_seed / 10;
+
+	fres = f_open(&defaults, defaults_file_path, FA_WRITE | FA_CREATE_NEW);
+	if (FR_EXIST == fres) {
+		f_open(&defaults, defaults_file_path, FA_READ);
+		// ... read to defaults
+	} else if (FR_OK == fres) {
+		// ... write defaults
+	}
+	f_close(&defaults);
+	file_open(&file_system, &defaults, defaults_file_path);
 
 	/* End defaults */
 

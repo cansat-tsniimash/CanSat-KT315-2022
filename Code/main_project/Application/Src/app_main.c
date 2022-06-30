@@ -105,10 +105,10 @@ void app_main (void) {
 	file_puts(&file_system, &dosimeter_file, dosimeter_file_path, "flag;num;time from start;tps;tpm;ticks sum;crc\n");
 
 	file_open(&file_system, &bmp_file, bmp_file_path);
-	file_puts(&file_system, &bmp_file, bmp_file_path, "flag;num;time from start;bmp temperature;bmp pressure;crc\n");
+	file_puts(&file_system, &bmp_file, bmp_file_path, "flag;num;time from start;bmp temperature;bmp pressure;status;crc\n");
 
 	file_open(&file_system, &ds_file, ds_file_path);
-	file_puts(&file_system, &ds_file, ds_file_path, "flag;num;time from start;ds temperature;lux rocket;lux seed;status;crc\n");
+	file_puts(&file_system, &ds_file, ds_file_path, "flag;num;time from start;ds temperature;lux rocket;lux seed;crc\n");
 
 	file_open(&file_system, &gps_file, gps_file_path);
 	file_puts(&file_system, &gps_file, gps_file_path, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");

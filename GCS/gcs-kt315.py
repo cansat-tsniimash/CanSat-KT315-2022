@@ -75,10 +75,10 @@ if __name__ == '__main__':
 	file_dosimeter.write(b'ticks per last second;ticks per last minute;ticks sum\n')
 	file_dosimeter.flush()
 	file_bmp = open(filename_bmp, 'wb')
-	file_bmp.write(b'bmp temperature;bmp pressure\n')
+	file_bmp.write(b'bmp temperature;bmp pressure;status\n')
 	file_bmp.flush()
 	file_ds = open(filename_ds, 'wb')
-	file_ds.write(b'ds temperature;rocket lux;seed lux;status\n')
+	file_ds.write(b'ds temperature;rocket lux;seed lux\n')
 	file_ds.flush()
 	file_gps = open(filename_gps, 'wb')
 	file_gps.write(b'longtitude;latitude;altitude;time sec;time microsec;fix\n')
@@ -134,26 +134,26 @@ if __name__ == '__main__':
 
 					elif unpacked_service[0] == 1:
 						try:
-							unpacked_data = struct.unpack('<hL', package_data)
+							unpacked_data = struct.unpack('<ddB', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
 							bmp_temperature = unpacked_data[0]
 							bmp_pressure = unpacked_data[1]
-							file_bmp.write(bytes(f'{bmp_temperature};{bmp_pressure}\n', 'utf-8'))
+							status = unpacked_data[2]
+							file_bmp.write(bytes(f'{bmp_temperature};{bmp_pressure};{status}\n', 'utf-8'))
 							file_bmp.flush()
 
 					elif unpacked_service[0] == 2:
 						try:
-							unpacked_data = struct.unpack('<fffB', package_data)
+							unpacked_data = struct.unpack('<fff', package_data)
 						except Exception as e:
 							print(f'{e}\ndata received: {len(package)} bytes')
 						else:
 							ds_temperature = unpacked_data[0]
 							rckt_lux = unpacked_data[1]
 							seed_lux = unpacked_data[2]
-							status = unpacked_data[3]
-							file_ds.write(bytes(f'{ds_temperature};{rckt_lux};{seed_lux};{status}\n', 'utf-8'))
+							file_ds.write(bytes(f'{ds_temperature};{rckt_lux};{seed_lux}\n', 'utf-8'))
 							file_ds.flush()
 
 					elif unpacked_service[0] == 3:

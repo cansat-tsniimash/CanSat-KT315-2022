@@ -5,6 +5,6 @@
 #define STABILISATION_DELAY 5000
 #define INCINERATOR_DELAY 5000
 
-void app_main (void);
+void app_main(void);
 
 #endif //APP_MAIN_H_

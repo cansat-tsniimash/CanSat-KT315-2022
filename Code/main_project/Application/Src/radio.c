@@ -8,9 +8,9 @@ static uint16_t package_num_gps = 0;
 static uint16_t package_num_inertial = 0;
 static uint16_t package_num_sebastian = 0;
 
-static unsigned short Crc16(unsigned char *buf, unsigned short len) {
-	unsigned short crc = 0xFFFF;
-	unsigned char i;
+uint16_t Crc16(uint8_t *buf, uint16_t len) {
+	uint16_t crc = 0xFFFF;
+	uint8_t i;
 	while (len--) {
 		crc ^= *buf++ << 8;
 		for (i = 0; i < 8; i++)
@@ -86,7 +86,7 @@ rf_dosimeter_package_crc_t pack_rf_dosimeter(uint32_t ticks_per_last_sec, uint32
 	};
 	rf_dosimeter_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_dosimeter++;
 	return rf_package_crc_;
@@ -103,7 +103,7 @@ rf_bmp_package_crc_t pack_rf_bmp(double temperature, double pressure, uint8_t st
 	};
 	rf_bmp_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_bmp++;
 	return rf_package_crc_;
@@ -120,7 +120,7 @@ rf_ds_package_crc_t pack_rf_ds(float temperature, float rckt_lux, float seed_lux
 	};
 	rf_ds_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_ds++;
 	return rf_package_crc_;
@@ -140,7 +140,7 @@ rf_gps_package_crc_t pack_rf_gps(float lon, float lat, float alt, uint32_t time_
 	};
 	rf_gps_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_gps++;
 	return rf_package_crc_;
@@ -163,7 +163,7 @@ rf_inertial_package_crc_t pack_rf_inertial(int16_t acc [3], int16_t gyro [3], in
 	};
 	rf_inertial_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_inertial++;
 	return rf_package_crc_;
@@ -181,7 +181,7 @@ rf_sebastian_package_crc_t pack_rf_sebastian(float quaternion [4]) {
 	};
 	rf_sebastian_package_crc_t rf_package_crc_ = {
 		.pack = rf_package_,
-		.crc = Crc16((unsigned char*)&rf_package_, sizeof(rf_package_))
+		.crc = Crc16((uint8_t*)&rf_package_, sizeof(rf_package_))
 	};
 	package_num_sebastian++;
 	return rf_package_crc_;

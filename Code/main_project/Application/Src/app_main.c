@@ -92,6 +92,7 @@ void app_main (void) {
 	char sd_buffer[300] = {0};
 	uint16_t sd_buffer_size = 0;
 	UINT sd_bytes_written = 0;
+	UINT sd_bytes_read = 0;
 	FRESULT fres = 0;
 
 	const char defaults_file_path[] = "defaults.bin";
@@ -104,22 +105,22 @@ void app_main (void) {
 
 	file_system_mount(&file_system);
 
-	file_open(&file_system, &dosimeter_file, dosimeter_file_path);
+	file_open(&file_system, &dosimeter_file, dosimeter_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &dosimeter_file, dosimeter_file_path, "flag;num;time from start;tps;tpm;ticks sum;crc\n");
 
-	file_open(&file_system, &bmp_file, bmp_file_path);
+	file_open(&file_system, &bmp_file, bmp_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &bmp_file, bmp_file_path, "flag;num;time from start;bmp temperature;bmp pressure;status;crc\n");
 
-	file_open(&file_system, &ds_file, ds_file_path);
+	file_open(&file_system, &ds_file, ds_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &ds_file, ds_file_path, "flag;num;time from start;ds temperature;lux rocket;lux seed;crc\n");
 
-	file_open(&file_system, &gps_file, gps_file_path);
+	file_open(&file_system, &gps_file, gps_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &gps_file, gps_file_path, "flag;num;time from start;longtitude;latitude;altitude;time sec high; time sec low;time microsec;fix;crc\n");
 
-	file_open(&file_system, &inertial_file, inertial_file_path);
+	file_open(&file_system, &inertial_file, inertial_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &inertial_file, inertial_file_path, "flag;num;time from start;acc x;acc y;acc z;gyro x;gyro y;gyro z;mag x;mag y;mag z;crc\n");
 
-	file_open(&file_system, &sebastian_file, sebastian_file_path);
+	file_open(&file_system, &sebastian_file, sebastian_file_path, FA_WRITE | FA_OPEN_APPEND);
 	file_puts(&file_system, &sebastian_file, sebastian_file_path, "flag;num;time from start; quaternion 1; quaternion 2; quaternion 3; quaternion 4;crc\n");
 
 	/* End Init */
@@ -145,7 +146,7 @@ void app_main (void) {
 
 	gps_data_t gps_data = {0};
 
-	uint16_t seb_delta = 0;
+	float seb_delta = 0;
 	float seb_quaternion [4] = {0};
 
 	status_t status = STATUS_BEFORE_ROCKET;
@@ -155,34 +156,52 @@ void app_main (void) {
 
 	/* Begin defaults */
 
-	float ground_pressure = 0.0;
-	float sum_pressure = 0.0;
+	double ground_pressure = 0.0;
+	double sum_pressure = 0.0;
 	float ground_lux_rckt = 0.0;
 	float sum_rckt = 0.0;
-	float ground_lux_seed = 0.0;
-	float sum_seed = 0.0;
 	for (uint8_t i = 0; i < 10; i++) {
 		bmp_data = bmp280_get_data(&bmp280);
 		ground_pressure = bmp_data.pressure;
 		ground_lux_rckt = photores_get_data(photores_rckt);
-		ground_lux_seed = photores_get_data(photores_seed);
 		sum_pressure += ground_pressure;
 		sum_rckt += ground_lux_rckt;
-		sum_seed += ground_lux_seed;
 	}
-	ground_pressure = sum_pressure / 10;
-	ground_lux_rckt = sum_rckt / 10;
-	ground_lux_seed = sum_seed / 10;
+	ground_pressure = sum_pressure / 10.0;
+	ground_lux_rckt = sum_rckt / 10.0;
+
+	sd_defaults_t default_data = {
+		.ground_pressure = ground_pressure,
+		.ground_lux_rckt = ground_lux_rckt,
+		.status = status
+	};
+	sd_defaults_crc_t default_data_crced = {
+		.pack = default_data,
+		.crc = Crc16((uint8_t*)&default_data, sizeof(default_data))
+	};
+	sd_defaults_crc_t read_defaults_data = {0};
+	uint16_t read_crc = 0;
 
 	fres = f_open(&defaults, defaults_file_path, FA_WRITE | FA_CREATE_NEW);
 	if (FR_EXIST == fres) {
-		f_open(&defaults, defaults_file_path, FA_READ);
-		// ... read to defaults
+		file_open(&file_system, &defaults, defaults_file_path, FA_READ | FA_OPEN_EXISTING);
+		file_read(&file_system, &defaults, defaults_file_path, &read_defaults_data, sizeof(default_data), &sd_bytes_read);
+		read_crc = Crc16((uint8_t*)&read_defaults_data.pack, sizeof(read_defaults_data.pack));
+		if (read_defaults_data.crc == read_crc) {
+			ground_pressure = read_defaults_data.pack.ground_pressure;
+			ground_lux_rckt = read_defaults_data.pack.ground_lux_rckt;
+			status = read_defaults_data.pack.status;
+		} else {
+			ground_pressure = 0.0;
+			ground_lux_rckt = 0.0;
+			status = STATUS_LANDED;
+		}
 	} else if (FR_OK == fres) {
-		// ... write defaults
+		file_write(&file_system, &defaults, defaults_file_path, &default_data_crced, sizeof(default_data), &sd_bytes_written);
+		file_sync(&file_system, &defaults, defaults_file_path);
 	}
 	f_close(&defaults);
-	file_open(&file_system, &defaults, defaults_file_path);
+	file_open(&file_system, &defaults, defaults_file_path, FA_WRITE | FA_OPEN_ALWAYS);
 
 	/* End defaults */
 
@@ -250,10 +269,10 @@ void app_main (void) {
 		}
 
 		//Inertial
-		timer_update_sebastian();
 		lsm_data = lsm_get_data(&lsm);
 		lis_data = lis_get_data(&lis);
 		seb_delta = sebastian_get_delta();
+		timer_update_sebastian();
 		for (int i = 0; i < 3; i++) lsm_acc[i] = (int16_t)(lsm_data.acc[i] * 2000);
 		for (int i = 0; i < 3; i++) lsm_gyro[i] = (int16_t)(lsm_data.gyro[i] * 15);
 		for (int i = 0; i < 3; i++) lis_mag[i] = (int16_t)(lis_data.mag[i] * 2000);
@@ -265,7 +284,7 @@ void app_main (void) {
 		file_write(&file_system, &inertial_file, inertial_file_path, sd_buffer, sd_buffer_size, &sd_bytes_written);
 
 		//Sebastian Madgwick
-		MadgwickAHRSupdate(seb_quaternion, lsm_data.gyro[0], lsm_data.gyro[1], lsm_data.gyro[2], lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2], -1 * lis_data.mag[0], -1 * lis_data.mag[1], -1 * lis_data.mag[2], (float)seb_delta / 1000.0, 0.3);
+		MadgwickAHRSupdate(seb_quaternion, lsm_data.gyro[0], lsm_data.gyro[1], lsm_data.gyro[2], lsm_data.acc[0], lsm_data.acc[1], lsm_data.acc[2], -1 * lis_data.mag[0], -1 * lis_data.mag[1], -1 * lis_data.mag[2], seb_delta, 0.3);
 
 		rf_sebastian_package_crc_t sebastian_package = pack_rf_sebastian(seb_quaternion);
 		send_rf_package(&nrf24, &sebastian_package, sizeof(sebastian_package));
@@ -287,39 +306,45 @@ void app_main (void) {
 		//Check status
 		if (STATUS_BEFORE_ROCKET == status) {
 			photores_rckt_lux = photores_get_data(photores_rckt);
-			photores_seed_lux = photores_get_data(photores_seed);
 			if (!HAL_GPIO_ReadPin(Switch_GPIO_Port, Switch_Pin)) {
 				time_on = HAL_GetTick();
 			}
 			if ((photores_rckt_lux < PHOTORESISTOR_CRITICAL_MODIFICATOR * ground_lux_rckt) && (HAL_GetTick() - time_on > 10000) && (HAL_GPIO_ReadPin(Switch_GPIO_Port, Switch_Pin))) {
 				status = STATUS_IN_ROCKET;
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 			}
 		} else if (STATUS_IN_ROCKET == status) {
+			photores_rckt_lux = photores_get_data(photores_rckt);
 			if (photores_rckt_lux > (1 - PHOTORESISTOR_CRITICAL_MODIFICATOR) * ground_lux_rckt) {
-				status = STATUS_OUT_OF_ROCKET;
 				time_out = HAL_GetTick();
+				status = STATUS_OUT_OF_ROCKET;
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 			}
 		} else if (STATUS_OUT_OF_ROCKET == status) {
 			if (HAL_GetTick() - time_out > STABILISATION_DELAY) {
 				status = STATUS_STABILISED;
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 			}
 		} else if (STATUS_STABILISED == status) {
 			HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 1);
 			time_burning = HAL_GetTick();
 			status = STATUS_STARTED_BURNING;
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 		} else if (STATUS_STARTED_BURNING == status) {
 			if (HAL_GetTick() - time_burning > INCINERATOR_DELAY) {
 				HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 0);
 				status = STATUS_STRING_BURNT;
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 			}
 		} else if (STATUS_STRING_BURNT == status) {
 			bmp_data = bmp280_get_data(&bmp280);
 			time_height = HAL_GetTick();
 			height = calculate_height(bmp_data.pressure, ground_pressure);
-			if (prev_height - height < 0.00001 * (time_height - time_prev_height)) {
+			if (prev_height - height < 0.001 * (time_height - time_prev_height)) {
 				height_delta_counter++;
 				if (height_delta_counter > 9) {
 					status = STATUS_LANDED;
+					update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 				}
 			}
 			prev_height = height;
@@ -327,6 +352,7 @@ void app_main (void) {
 		} else if (STATUS_LANDED == status) {
 			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 			status = STATUS_AFTER;
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
 		}
 	}
 }

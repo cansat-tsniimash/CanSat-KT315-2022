@@ -18,9 +18,9 @@ void timer_update_sebastian(void) {
 	return;
 }
 
-uint16_t sebastian_get_delta(void) {
+float sebastian_get_delta(void) {
 	uint32_t sebastian_delta = HAL_GetTick() - sebastian_data_last_measurement;
-	return sebastian_delta;
+	return sebastian_delta / 1000.0;
 }
 
 void timer_update_sd_sync(void) {

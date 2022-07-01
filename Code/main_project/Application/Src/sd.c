@@ -7,6 +7,13 @@ extern uint32_t sd_reboot_timer;
 
 #include <radio.h>
 
+void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, UINT* bytes_written, sd_defaults_crc_t *data, uint8_t status) {
+	data->pack.status = status;
+	data->crc = Crc16((uint8_t*)&data->pack, sizeof(data->pack));
+	file_write(file_system, file, path, data, sizeof(*data), bytes_written);
+	file_sync(file_system, file, path);
+}
+
 uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *data) {
 	memset(buffer, 0, 300);
 	uint16_t num_written = snprintf(
@@ -101,15 +108,35 @@ void file_system_mount(FATFS* file_system) {
 	return;
 }
 
-void file_open(FATFS* file_system, FIL* file, const char* path) {
+void file_open(FATFS* file_system, FIL* file, const char* path, BYTE mode) {
 	FRESULT fres = 0;
-	fres = f_open(file, path, FA_WRITE | FA_OPEN_APPEND);
+	fres = f_open(file, path, mode);
 	if (FR_OK != fres) {
 		f_mount(NULL, "", 1);
 		file_system_mount(file_system);
-		fres = f_open(file, path, FA_WRITE | FA_OPEN_APPEND);
+		fres = f_open(file, path, mode);
 		if (FR_OK != fres) {
 			system_reset();
+		}
+	}
+	return;
+}
+
+void file_read(FATFS* file_system, FIL* file, const char* path, void* buffer, uint16_t bytes_to_read, UINT* bytes_read) {
+	FRESULT fres = 0;
+	fres = f_read(file, buffer, bytes_to_read, bytes_read);
+	if (FR_OK != fres) {
+		f_close(file);
+		file_open(file_system, file, path, FA_READ | FA_OPEN_EXISTING);
+		fres = f_read(file, buffer, bytes_to_read, bytes_read);
+		if (FR_OK != fres) {
+			f_mount(NULL, "", 1);
+			file_system_mount(file_system);
+			file_open(file_system, file, path, FA_READ | FA_OPEN_EXISTING);
+			fres = f_read(file, buffer, bytes_to_read, bytes_read);
+			if (FR_OK != fres) {
+				system_reset();
+			}
 		}
 	}
 	return;
@@ -120,12 +147,12 @@ void file_puts(FATFS* file_system, FIL* file, const char* path, const char* str)
 	fres = f_puts(str, file);
 	if (0 > fres) {
 		f_close(file);
-		file_open(file_system, file, path);
+		file_open(file_system, file, path, FA_WRITE | FA_OPEN_APPEND);
 		fres = f_puts(str, file);
 		if (0 > fres) {
 			f_mount(NULL, "", 1);
 			file_system_mount(file_system);
-			file_open(file_system, file, path);
+			file_open(file_system, file, path, FA_WRITE | FA_OPEN_APPEND);
 			fres = f_puts(str, file);
 			if (0 > fres) {
 				system_reset();
@@ -139,17 +166,17 @@ void file_puts(FATFS* file_system, FIL* file, const char* path, const char* str)
 	return;
 }
 
-void file_write(FATFS* file_system, FIL* file, const char* path, char* buffer, uint16_t buffer_size, UINT* bytes_written) {
+void file_write(FATFS* file_system, FIL* file, const char* path, void* buffer, uint16_t buffer_size, UINT* bytes_written) {
 	FRESULT fres = 0;
 	fres = f_write(file, buffer, buffer_size, bytes_written);
 	if (FR_OK != fres) {
 		f_close(file);
-		file_open(file_system, file, path);
+		file_open(file_system, file, path, FA_WRITE | FA_OPEN_APPEND);
 		fres = f_write(file, buffer, buffer_size, bytes_written);
 		if (FR_OK != fres) {
 			f_mount(NULL, "", 1);
 			file_system_mount(file_system);
-			file_open(file_system, file, path);
+			file_open(file_system, file, path, FA_WRITE | FA_OPEN_APPEND);
 			fres = f_write(file, buffer, buffer_size, bytes_written);
 			if (FR_OK != fres) {
 				system_reset();
@@ -168,15 +195,10 @@ void file_sync(FATFS* file_system, FIL* file, const char* path) {
 	fres = f_sync(file);
 	if (FR_OK != fres) {
 		f_close(file);
-		file_open(file_system, file, path);
-		fres = f_sync(file);
-		if (FR_OK != fres) {
-			f_mount(NULL, "", 1);
-			file_system_mount(file_system);
-			file_open(file_system, file, path);
-		} else {
-			file_puts(file_system, file, path, "reopened, file error fixed\n");
-		}
+		f_mount(NULL, "", 1);
+		file_system_mount(file_system);
+		file_open(file_system, file, path, FA_WRITE | FA_OPEN_APPEND);
+		file_puts(file_system, file, path, "reopened, file error fixed\n");
 	}
 	return;
 }

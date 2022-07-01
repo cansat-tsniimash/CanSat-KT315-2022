@@ -12,7 +12,7 @@
 
 void timer_update_ds18b20(void);
 void timer_update_sebastian(void);
-uint16_t sebastian_get_delta(void);
+float sebastian_get_delta(void);
 void timer_update_sd_sync(void);
 void timer_update_sd_reboot(void);
 

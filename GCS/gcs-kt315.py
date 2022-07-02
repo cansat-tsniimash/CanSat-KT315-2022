@@ -10,7 +10,7 @@ from RF24 import RF24_CRC_16, RF24_CRC_8, RF24_CRC_DISABLED
 from RF24 import RF24 as RF24_CLASS
 
 
-radio=RF24_CLASS(24, 1)
+radio = RF24_CLASS(24, 1) #
 
 
 def generate_logfile_name(packet_type):
@@ -91,19 +91,20 @@ if __name__ == '__main__':
 	file_sebastian.flush()
 
 
-	COUNTER = 0
-	LOSS = 0
-	PREV_PACKET_NUMBER = None
+	#COUNTER = 0
+	#LOSS = 0
+	#PREV_PACKET_NUMBER = None
+	ground_pressure = 100276.499611
 	while True:
 		has_payload, pipe_number = radio.available_pipe()
 		if has_payload:
 			payload_size = static_payload_size
 			if payload_size is None:
 				payload_size = radio.getDynamicPayloadSize()
-				print(f'\n{payload_size}')
+				#print(f'\n{payload_size}')
 
 			package = radio.read(payload_size)
-			print(f'got data {package}')
+			#print(f'got data {package}')
 			file.write(package)
 			file.flush()		
 			
@@ -141,8 +142,11 @@ if __name__ == '__main__':
 							bmp_temperature = unpacked_data[0]
 							bmp_pressure = unpacked_data[1]
 							status = unpacked_data[2]
+							if unpacked_service[1] == 0:
+								ground_pressure = bmp_pressure
 							file_bmp.write(bytes(f'{bmp_temperature};{bmp_pressure};{status}\n', 'utf-8'))
 							file_bmp.flush()
+							print(f'Высота (bmp280): {44330 * (1 - (bmp_pressure / ground_pressure) ** (1.0 / 5.255))}\n\n')
 
 					elif unpacked_service[0] == 2:
 						try:
@@ -170,6 +174,7 @@ if __name__ == '__main__':
 							fix = unpacked_data[5]
 							file_gps.write(bytes(f'{longtitude};{latitude};{altitude};{time_sec};{time_microsec};{fix}\n', 'utf-8'))
 							file_gps.flush()
+							print(f'Долгота: {longtitude}\nШирота: {latitude}\nВысота: {altitude}\n\n')
 
 					elif unpacked_service[0] == 4:
 						try:
@@ -193,14 +198,14 @@ if __name__ == '__main__':
 							file_sebastian.write(bytes(f'{quaternion[0]};{quaternion[1]};{quaternion[2]};{quaternion[3]}\n', 'utf-8'))
 							file_sebastian.flush()
 
-					if PREV_PACKET_NUMBER is not None:
+					"""if PREV_PACKET_NUMBER is not None:
 						if (PREV_PACKET_NUMBER + 1) & 0xFFFF != num:
 							LOSS += 1
 						PREV_PACKET_NUMBER = num
-					COUNTER += 1
+					COUNTER += 1"""
 
 
-				print(f'LOSS = {LOSS}, COUNTER = {COUNTER}, LOSS PERCENT = {LOSS / COUNTER * 100}%')
+				#print(f'LOSS = {LOSS}, COUNTER = {COUNTER}, LOSS PERCENT = {LOSS / COUNTER * 100}%')
 		else:
 			pass
 

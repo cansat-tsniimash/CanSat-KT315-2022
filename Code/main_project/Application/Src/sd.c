@@ -94,6 +94,7 @@ uint16_t sd_parse_to_bytes_sebastian(char *buffer, rf_sebastian_package_crc_t *d
 static void system_reset(void) {
 	if (0 == sd_reboot_timer) {
 		timer_update_sd_reboot();
+		HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 	} else {
 		if (HAL_GetTick() - sd_reboot_timer > SD_REBOOT_DELAY) {
 			NVIC_SystemReset();

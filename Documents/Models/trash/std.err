@@ -1,0 +1,80 @@
+clnttcp_create: connect failed, error = 10061, retrying
+%UIMSG-USER-ERROR, Failed to preload image ui_floppy_5_25_device_image.png
+%UIMSG-USER-ERROR, Did not find resource translation file "tree_node_tmpl_symb.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "procmdmfgmilldrillcycle.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "procmdmfgturndrillcycle.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "procmdaogallerylist.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "group_floating_dlg.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "appl_menu_pane.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "ProTk_DB_dev.txt"
+%UIMSG-USER-ERROR, TitleBarImage "creo_logo_parametric.ico" is the wrong size (32x32) for main_dlg_w1
+%UIMSG-APPLICATION-ERROR, Did not find item <PHTLeft.CeViewTabLay> in Tab PHTLeft.ProExplorerTab@main_dlg_w1
+%UIMSG-APPLICATION-ERROR, Failed to modify component: PHTLeft.ProExplorerTab, in device: main_dlg_w1
+%UIMSG-APPLICATION-ERROR, Did not find item <PHTLeft.HistLay> in Tab PHTLeft.ProExplorerTab@main_dlg_w1
+%UIMSG-APPLICATION-ERROR, Failed to modify component: PHTLeft.ProExplorerTab, in device: main_dlg_w1
+%UIMSG-USER-ERROR, Did not find resource translation file "view_status_bar_layout.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "igt_status_bar_layout.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "StatusBarFindToolLayout.txt"
+%UIMSG-APPLICATION-ERROR, Could not find component: proe_win, in device: rmb_popup, for retrieve
+%UIMSG-COMMAND-ERROR, uicmd_cmd_bracket_func_add: NULL uiCmdCommand
+%UIMSG-APPLICATION-ERROR, ui_create_search_path: Ignoring non-existent folder "../../libs/prowtlibs"
+%UIMSG-APPLICATION-ERROR, ui_create_search_path: Ignoring non-existent folder "../../proe/uitools"
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu, in device: ProTk_DB_dev, to do operation
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, for retrieve
+%UIMSG-APPLICATION-ERROR, Could not find component: EFX_ActionMenu_ProTk, in device: ProTk_DB_dev, to do operation
+%UIMSG-USER-ERROR, Did not find resource translation file "ribbonui.txt"
+%UIMSG-USER-ERROR, Did not find resource translation file "ribbonui.txt"
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, No device name specified for ui_modify
+%UIMSG-APPLICATION-ERROR, Could not find component: , in device: main_dlg_w1, for remove action

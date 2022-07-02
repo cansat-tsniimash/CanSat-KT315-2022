@@ -150,6 +150,7 @@ void app_main (void) {
 	float seb_quaternion [4] = {0};
 
 	status_t status = STATUS_BEFORE_ROCKET;
+	uint8_t reboot_counter = 0;
 
 	/* End data structures */
 
@@ -173,7 +174,8 @@ void app_main (void) {
 	sd_defaults_t default_data = {
 		.ground_pressure = ground_pressure,
 		.ground_lux_rckt = ground_lux_rckt,
-		.status = status
+		.status = status,
+		.reboot_counter = reboot_counter
 	};
 	sd_defaults_crc_t default_data_crced = {
 		.pack = default_data,
@@ -185,23 +187,25 @@ void app_main (void) {
 	fres = f_open(&defaults, defaults_file_path, FA_WRITE | FA_CREATE_NEW);
 	if (FR_EXIST == fres) {
 		file_open(&file_system, &defaults, defaults_file_path, FA_READ | FA_OPEN_EXISTING);
-		file_read(&file_system, &defaults, defaults_file_path, &read_defaults_data, sizeof(default_data), &sd_bytes_read);
+		file_read(&file_system, &defaults, defaults_file_path, &read_defaults_data, sizeof(read_defaults_data), &sd_bytes_read);
 		read_crc = Crc16((uint8_t*)&read_defaults_data.pack, sizeof(read_defaults_data.pack));
 		if (read_defaults_data.crc == read_crc) {
 			ground_pressure = read_defaults_data.pack.ground_pressure;
 			ground_lux_rckt = read_defaults_data.pack.ground_lux_rckt;
 			status = read_defaults_data.pack.status;
+			reboot_counter = read_defaults_data.pack.reboot_counter;
 		} else {
 			ground_pressure = 0.0;
 			ground_lux_rckt = 0.0;
 			status = STATUS_LANDED;
 		}
+		reboot_counter++;
 	} else if (FR_OK == fres) {
-		file_write(&file_system, &defaults, defaults_file_path, &default_data_crced, sizeof(default_data), &sd_bytes_written);
+		file_write(&file_system, &defaults, defaults_file_path, &default_data_crced, sizeof(default_data_crced), &sd_bytes_written);
 		file_sync(&file_system, &defaults, defaults_file_path);
 	}
 	f_close(&defaults);
-	file_open(&file_system, &defaults, defaults_file_path, FA_WRITE | FA_OPEN_ALWAYS);
+	file_open(&file_system, &defaults, defaults_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 
 	/* End defaults */
 
@@ -311,30 +315,30 @@ void app_main (void) {
 			}
 			if ((photores_rckt_lux < PHOTORESISTOR_CRITICAL_MODIFICATOR * ground_lux_rckt) && (HAL_GetTick() - time_on > 10000) && (HAL_GPIO_ReadPin(Switch_GPIO_Port, Switch_Pin))) {
 				status = STATUS_IN_ROCKET;
-				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 			}
 		} else if (STATUS_IN_ROCKET == status) {
 			photores_rckt_lux = photores_get_data(photores_rckt);
 			if (photores_rckt_lux > (1 - PHOTORESISTOR_CRITICAL_MODIFICATOR) * ground_lux_rckt) {
 				time_out = HAL_GetTick();
 				status = STATUS_OUT_OF_ROCKET;
-				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 			}
 		} else if (STATUS_OUT_OF_ROCKET == status) {
 			if (HAL_GetTick() - time_out > STABILISATION_DELAY) {
 				status = STATUS_STABILISED;
-				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 			}
 		} else if (STATUS_STABILISED == status) {
 			HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 1);
 			time_burning = HAL_GetTick();
 			status = STATUS_STARTED_BURNING;
-			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 		} else if (STATUS_STARTED_BURNING == status) {
 			if (HAL_GetTick() - time_burning > INCINERATOR_DELAY) {
 				HAL_GPIO_WritePin(Incinerator_GPIO_Port, Incinerator_Pin, 0);
 				status = STATUS_STRING_BURNT;
-				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+				update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 			}
 		} else if (STATUS_STRING_BURNT == status) {
 			bmp_data = bmp280_get_data(&bmp280);
@@ -344,7 +348,7 @@ void app_main (void) {
 				height_delta_counter++;
 				if (height_delta_counter > 9) {
 					status = STATUS_LANDED;
-					update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+					update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 				}
 			}
 			prev_height = height;
@@ -352,7 +356,7 @@ void app_main (void) {
 		} else if (STATUS_LANDED == status) {
 			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 			status = STATUS_AFTER;
-			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status);
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 		}
 	}
 }

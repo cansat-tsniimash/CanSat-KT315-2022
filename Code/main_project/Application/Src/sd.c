@@ -7,8 +7,9 @@ extern uint32_t sd_reboot_timer;
 
 #include <radio.h>
 
-void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, UINT* bytes_written, sd_defaults_crc_t *data, uint8_t status) {
+void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, UINT* bytes_written, sd_defaults_crc_t *data, uint8_t status, uint8_t reboot_count) {
 	data->pack.status = status;
+	data->pack.reboot_counter = reboot_count;
 	data->crc = Crc16((uint8_t*)&data->pack, sizeof(data->pack));
 	file_write(file_system, file, path, data, sizeof(*data), bytes_written);
 	file_sync(file_system, file, path);

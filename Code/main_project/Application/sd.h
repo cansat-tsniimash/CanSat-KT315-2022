@@ -10,6 +10,7 @@ typedef struct __attribute__((packed)) {
 	double ground_pressure;
 	float ground_lux_rckt;
 	uint8_t status;
+	uint8_t reboot_counter;
 } sd_defaults_t;
 
 typedef struct __attribute__((packed)) {
@@ -17,7 +18,7 @@ typedef struct __attribute__((packed)) {
 	uint16_t crc;
 } sd_defaults_crc_t;
 
-void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, UINT* bytes_written, sd_defaults_crc_t *data, uint8_t status);
+void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, UINT* bytes_written, sd_defaults_crc_t *data, uint8_t status, uint8_t reboot_count);
 uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *data);
 uint16_t sd_parse_to_bytes_bmp(char *buffer, rf_bmp_package_crc_t *data);
 uint16_t sd_parse_to_bytes_ds(char *buffer, rf_ds_package_crc_t *data);

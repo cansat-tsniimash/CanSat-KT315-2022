@@ -11,8 +11,10 @@ void update_status_in_defaults(FATFS* file_system, FIL* file, const char* path, 
 	data->pack.status = status;
 	data->pack.reboot_counter = reboot_count;
 	data->crc = Crc16((uint8_t*)&data->pack, sizeof(data->pack));
+	file_open(file_system, file, path, FA_WRITE | FA_CREATE_ALWAYS);
 	file_write(file_system, file, path, data, sizeof(*data), bytes_written);
 	file_sync(file_system, file, path);
+	f_close(file);
 }
 
 uint16_t sd_parse_to_bytes_dosimeter(char *buffer, rf_dosimeter_package_crc_t *data) {
@@ -102,6 +104,8 @@ static void system_reset(void) {
 
 void file_system_mount(FATFS* file_system) {
 	FRESULT fres = 0;
+	extern Disk_drvTypeDef disk;
+	disk.is_initialized[0] = 0;
 	fres = f_mount(file_system, "", 1);
 	if (FR_OK != fres) {
 		system_reset();

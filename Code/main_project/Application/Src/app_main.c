@@ -74,7 +74,7 @@ void app_main (void) {
 	nrf24_service_t nrf24 = { .nrf24_lower_api_config = &nrf24_config };
 
 	nrf24_spi_pins_sr_t nrf24_sr_setup = nrf24_create_sr_descriptor(&shift_reg_rf, 0, 1);
-	nrf24_rf_config_t nrf24_rf_setup = nrf24_create_rf_descriptor(NRF24_DATARATE_250_KBIT,NRF24_TXPOWER_MINUS_0_DBM, 115);
+	nrf24_rf_config_t nrf24_rf_setup = nrf24_create_rf_descriptor(NRF24_DATARATE_250_KBIT, NRF24_TXPOWER_MINUS_0_DBM, 115);
 	nrf24_protocol_config_t nrf24_protocol_setup = nrf24_create_protocol_descriptor(NRF24_CRCSIZE_DISABLE, NRF24_ADDRES_WIDTH_5_BYTES, true, true, true, 0, 0);
 	nrf24_pipe_config_t nrf24_pipe_setup = nrf24_create_pipe_descriptor(false, 0xacacacacac, -1);
 	nrf24_init_stm32(&nrf24_config, &hspi2, &nrf24_sr_setup, &nrf24_rf_setup, &nrf24_protocol_setup, &nrf24_pipe_setup);
@@ -193,11 +193,15 @@ void app_main (void) {
 			ground_pressure = read_defaults_data.pack.ground_pressure;
 			ground_lux_rckt = read_defaults_data.pack.ground_lux_rckt;
 			status = read_defaults_data.pack.status;
+			if (STATUS_AFTER == status) {
+				status = STATUS_LANDED;
+			}
 			reboot_counter = read_defaults_data.pack.reboot_counter;
 		} else {
 			ground_pressure = 0.0;
 			ground_lux_rckt = 0.0;
 			status = STATUS_LANDED;
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
 		}
 		reboot_counter++;
 	} else if (FR_OK == fres) {
@@ -205,7 +209,6 @@ void app_main (void) {
 		file_sync(&file_system, &defaults, defaults_file_path);
 	}
 	f_close(&defaults);
-	file_open(&file_system, &defaults, defaults_file_path, FA_WRITE | FA_CREATE_ALWAYS);
 
 	/* End defaults */
 
@@ -356,7 +359,7 @@ void app_main (void) {
 		} else if (STATUS_LANDED == status) {
 			HAL_GPIO_WritePin(Buzzer_GPIO_Port, Buzzer_Pin, 1);
 			status = STATUS_AFTER;
-			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, status, reboot_counter);
+			update_status_in_defaults(&file_system, &defaults, defaults_file_path, &sd_bytes_written, &default_data_crced, STATUS_LANDED, reboot_counter);
 		}
 	}
 }
